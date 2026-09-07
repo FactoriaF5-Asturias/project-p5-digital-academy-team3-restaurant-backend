@@ -7,7 +7,9 @@ Se ha decidido realizar el flujo de usuario completo desde menu hasta realizar l
 **Workflow**: Frontend > Seguridad > Controller > Service > Repository > DB
 
 ### TABLAS OBLIGATORIAS PARA MVP
-- USERS: Definir clientes, cocina, staff
+- USERS_VALIDATION: Tabla de validación de usuario
+- USERS_DETAILS: Todos los datos adicionales del user
+- USER_ROLES: Definir los roles de usuario (Client, Kitchen, Driver, Staff)
 - PRODUCTS: catálogo de producto
 - CATEGORIES: Definir tipo de productos
 - TABLES: Mesas disponibles en el restaurante
@@ -18,6 +20,3 @@ Se ha decidido realizar el flujo de usuario completo desde menu hasta realizar l
 Atajos: 
 - Delegar carrito a frontend
 - ORDERS: Hacer exclusivamente la lógica para ON_SITE
-
-
-
