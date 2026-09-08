@@ -11,9 +11,10 @@ Se ha decidido realizar el flujo de usuario completo desde menu hasta realizar l
     - id PK
     - name VARCHAR
     - description TEXT
-    - category_id FK
+    - category_name FK
     - price DECIMAL(10,2)
-    - status boolean
+    - status BOOLEAN
+    - image_url VARCHAR(255)
 - CATEGORIES: Definir tipo de productos
     - id PK
     - name VARCHAR
@@ -28,6 +29,7 @@ Se ha decidido realizar el flujo de usuario completo desde menu hasta realizar l
     - name VARCHAR UNIQUE
 - ORDERS: Pedido hecho por cliente
     - id PK
+    - tablet_id FK
     - status_name FK
     - order_type_name FK 
     - payment_method_name FK
@@ -49,6 +51,8 @@ Se ha decidido realizar el flujo de usuario completo desde menu hasta realizar l
     - invoice_number VARCHAR
     - total_amount DECIMAL(10,2)
     - issued_at TIMESTAMP
+
+
 Atajos: 
 - Delegar carrito a frontend - Al confirmar el pedido y realizar el pago, se crea la ORDER junto con sus ORDER_ITEMS y su INVOICE.
 - ORDERS: Hacer exclusivamente la lógica para ON_SITE
@@ -70,32 +74,41 @@ PRODUCTS N:1 CATEGORIES
 
 
 ```text
-USERS_ROLES
-│
-│ 1:N
-▼
-USERS_VALIDATION
-│
-│ 1:1
-▼
-USERS_DETAILS
-
-
 CATEGORIES
+
 │
-│ N:M
+
+│ 1:N
+
 ▼
+
 PRODUCTS
+
 │
+
 │ 1:N
+
 ▼
+
 ORDER_ITEMS
+
 ▲
+
 │ 1:N
+
 │
+
 ORDERS
+
 │
+
 ├── N:1 ── TABLETS
+│
+├── N:1 ── STATUS
+│
+├── N:1 ── ORDER_TYPE
+│
+├── N:1 ── PAYMENT_METHOD
 │
 └── 1:1 ── INVOICES
 ```
