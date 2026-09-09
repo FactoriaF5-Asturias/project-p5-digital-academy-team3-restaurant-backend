@@ -7,10 +7,9 @@ CREATE TABLE orders (
 
     CONSTRAINT fk_tablet_id
         FOREIGN KEY (tablet_id)
-        REFERENCES tablets(id)
+        REFERENCES tablets(id),
 
     CONSTRAINT fk_status_name
         FOREIGN KEY (status_name)
         REFERENCES status(name) 
 );
-
