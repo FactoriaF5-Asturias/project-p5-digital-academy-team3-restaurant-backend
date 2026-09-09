@@ -1,0 +1,4 @@
+CREATE TABLE tablets (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(30) UNIQUE
+);
