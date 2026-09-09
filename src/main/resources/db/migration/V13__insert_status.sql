@@ -1,0 +1,7 @@
+INSERT INTO status (
+    name
+) VALUES
+('PENDING'),
+('CANCELLED'),
+('ACCEPTED'),
+('COMPLETED');
