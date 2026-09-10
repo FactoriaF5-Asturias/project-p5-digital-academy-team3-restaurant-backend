@@ -13,7 +13,7 @@ public class CategoryEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Column(nullable = false, unique = true)
     private String name;
@@ -21,7 +21,7 @@ public class CategoryEntity {
     public CategoryEntity() {
     }
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
