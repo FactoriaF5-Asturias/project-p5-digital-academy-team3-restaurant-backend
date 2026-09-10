@@ -1,5 +1,17 @@
 # ADAPTACIÓN DE ENTORNO DE TRABAJO PARA USAR LA DB
 
+## VisualStudio Code
+
+Opciones superiores (File.. Selection.. View.. Go.. **Run**)
+- Selecciona Add Configuration (Esto generará un launch.json en la carpeta .vscode)
+- Añade tus variables de entorno en el fichero
+Ejemplo:
+"env":{
+                "DATABASE_USERNAME": "credenciales",
+                "DATABASE_PASSWORD": "credenciales"
+            }
+
+
 ## CREAR BASE DE DATOS `giacobello`
 ### Dbeaver
 Entrar a Dbeaver y verificar si existe la base de datos
@@ -30,7 +42,7 @@ mvn clean install -DDATABASE_USERNAME=postgres -DDATABASE_PASSWORD=postgres
 
 **No existe giacobello**
 - Si en current_database() aparece postgres:
-    - Iniciar sesión y crear la database giacobello (importante llamarla exactamente así para que coincida con la jdbc url de .properties)
+    - Iniciar sesión y crear la database giacobello (importante llamarla exactamente así para que coincida con la jdbc url de .properties) | `CREATE DATABASE giacobello;`
     - Verificar su existencia
     - Conectarte a giacobello
 
