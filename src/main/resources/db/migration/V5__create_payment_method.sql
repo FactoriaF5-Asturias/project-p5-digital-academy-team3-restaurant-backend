@@ -1,0 +1,4 @@
+CREATE TABLE payment_method (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(30) UNIQUE NOT NULL
+);
