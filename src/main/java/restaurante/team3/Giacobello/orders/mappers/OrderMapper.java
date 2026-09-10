@@ -1,8 +1,9 @@
-package restaurante.team3.Giacobello.mappers;
+package restaurante.team3.Giacobello.orders.mappers;
 
 import org.springframework.stereotype.Component;
-import restaurante.team3.Giacobello.dto.OrderDTOResponse;
-import restaurante.team3.Giacobello.entity.OrderEntity;
+
+import restaurante.team3.Giacobello.orders.dto.OrderDTOResponse;
+import restaurante.team3.Giacobello.orders.entity.OrderEntity;
 
 @Component
 public class OrderMapper {

@@ -1,10 +1,11 @@
-package restaurante.team3.Giacobello.service;
+package restaurante.team3.Giacobello.orders.service;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import restaurante.team3.Giacobello.dto.OrderDTOResponse;
-import restaurante.team3.Giacobello.mappers.OrderMapper;
-import restaurante.team3.Giacobello.repository.OrderRepository;
+
+import restaurante.team3.Giacobello.orders.dto.OrderDTOResponse;
+import restaurante.team3.Giacobello.orders.mappers.OrderMapper;
+import restaurante.team3.Giacobello.orders.repository.OrderRepository;
 
 import java.util.List;
 

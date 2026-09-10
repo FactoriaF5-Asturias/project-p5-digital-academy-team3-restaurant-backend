@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.entity;
+package restaurante.team3.Giacobello.orders.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
