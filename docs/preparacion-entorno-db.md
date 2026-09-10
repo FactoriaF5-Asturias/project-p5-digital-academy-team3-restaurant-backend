@@ -3,51 +3,86 @@
 ## VisualStudio Code
 
 Opciones superiores (File.. Selection.. View.. Go.. **Run**)
+
 - Selecciona Add Configuration (Esto generará un launch.json en la carpeta .vscode)
 - Añade tus variables de entorno en el fichero
-Ejemplo:
-"env":{
-                "DATABASE_USERNAME": "credenciales",
-                "DATABASE_PASSWORD": "credenciales"
-            }
-
+  Ejemplo:
+  "env":{
+  "DATABASE_USERNAME": "credenciales",
+  "DATABASE_PASSWORD": "credenciales"
+  }
 
 ## CREAR BASE DE DATOS `giacobello`
+
 ### Dbeaver
+
 Entrar a Dbeaver y verificar si existe la base de datos
+
 - `SELECT current_database(), current_user;`
 
 #### Posibles errores
 
-**Arrancar el proceso de postgres**
+**Arrancar el proceso de postgres Windows**
+
 1. Windows + R
 2. services.msc
 3. Busca el servicio postgresql
 4. Inicialo
 
+**Arrancar el proceso de postgres Mac**
+
+1. Abrir cmd
+2. Instalar postgresql con Homebrew
+
+```cmd
+brew install postgresql@15
+```
+
+3. Crear la base de datos postgresql para inicialiar el directorio de datos
+
+```cmd
+/usr/local/opt/postgresql@15/bin/initdb -D /usr/local/var/postgresql@15 -U postgres --encoding=UTF8 --locale=C --auth=scram-sha-256 -W
+```
+
+4. Arrancar postgresql
+
+```cmd
+brew install postgresql@15
+```
+
+5. Comprobar la instalacion
+
+```cmd
+brew services list
+```
+
 **Error validación de usuario**
+
 - Modificar el fichero de PATH: PostgreSQL\data
-    - pg_hba.conf
-        - IPv4 e IPv6: cambiar el scram-sha-256 por trusted, guardar e iniciar sesión sin introducir contraseña.
-        - Detener el proceso de postgreSQL
-        - `ALTER USER postgres WITH PASSWORD 'postgres';`
-        - Cambiar trusted a scram-sha-256
-        - Reinicializar el proceso
+  - pg_hba.conf
+    - IPv4 e IPv6: cambiar el scram-sha-256 por trusted, guardar e iniciar sesión sin introducir contraseña.
+    - Detener el proceso de postgreSQL
+    - `ALTER USER postgres WITH PASSWORD 'postgres';`
+    - Cambiar trusted a scram-sha-256
+    - Reinicializar el proceso
 
 **"La autentificación password falló para el usuario ${DATABASE_USERNAME}"**
+
 ```bash
 mvn spring-boot:run -Dspring-boot.run.jvmArguments="-DDATABASE_USERNAME=postgres -DDATABASE_PASSWORD=postgres"
 mvn clean install -DDATABASE_USERNAME=postgres -DDATABASE_PASSWORD=postgres
 ```
 
 **No existe giacobello**
+
 - Si en current_database() aparece postgres:
-    - Iniciar sesión y crear la database giacobello (importante llamarla exactamente así para que coincida con la jdbc url de .properties) | `CREATE DATABASE giacobello;`
-    - Verificar su existencia
-    - Conectarte a giacobello
+  - Iniciar sesión y crear la database giacobello (importante llamarla exactamente así para que coincida con la jdbc url de .properties) | `CREATE DATABASE giacobello;`
+  - Verificar su existencia
+  - Conectarte a giacobello
 
 **Verificación de DB bien inicializada**
 En Dbeaver, ejecutar este comando en giacobello
+
 ```sql
 SELECT *
 FROM flyway_schema_history
@@ -55,7 +90,6 @@ ORDER BY installed_rank;
 ```
 
 Si aparecen las migraciones, es correcto.
-
 
 ## ¿Por que Flyway?
 
