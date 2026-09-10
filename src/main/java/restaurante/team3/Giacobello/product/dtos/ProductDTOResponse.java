@@ -15,7 +15,7 @@ public class ProductDTOResponse {
     public ProductDTOResponse() {
     }
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
