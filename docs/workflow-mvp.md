@@ -11,7 +11,7 @@ Se ha decidido realizar el flujo de usuario completo desde menu hasta realizar l
     - id PK
     - name VARCHAR
     - description TEXT
-    - category_name FK
+    - category_id FK
     - price DECIMAL(10,2)
     - status BOOLEAN
     - image_url VARCHAR(255)
