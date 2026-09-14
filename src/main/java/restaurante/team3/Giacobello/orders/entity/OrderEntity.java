@@ -42,11 +42,15 @@ public class OrderEntity {
     public OrderEntity(
             Integer id,
             Integer tabletId,
+            String orderTypeName,
+            String paymentMethodName,
             String statusName,
             BigDecimal totalAmount,
             LocalDateTime createdAt) {
         this.id = id;
         this.tabletId = tabletId;
+        this.orderTypeName = orderTypeName;
+        this.paymentMethodName = paymentMethodName;
         this.statusName = statusName;
         this.totalAmount = totalAmount;
         this.createdAt = createdAt;
