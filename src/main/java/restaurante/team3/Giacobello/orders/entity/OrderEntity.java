@@ -21,6 +21,12 @@ public class OrderEntity {
     @Column(name = "tablet_id")
     private Integer tabletId;
 
+    @Column(name = "order_type_name", length = 30)
+    private String orderTypeName;
+
+    @Column(name = "payment_method_name", length = 30)
+    private String paymentMethodName;
+
     @Column(name = "status_name", length = 50)
     private String statusName;
 
@@ -34,12 +40,11 @@ public class OrderEntity {
     }
 
     public OrderEntity(
-        Integer id,
-        Integer tabletId,
-        String statusName,
-        BigDecimal totalAmount,
-        LocalDateTime createdAt
-    ) {
+            Integer id,
+            Integer tabletId,
+            String statusName,
+            BigDecimal totalAmount,
+            LocalDateTime createdAt) {
         this.id = id;
         this.tabletId = tabletId;
         this.statusName = statusName;
@@ -85,5 +90,21 @@ public class OrderEntity {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getOrderTypeName() {
+        return orderTypeName;
+    }
+
+    public void setOrderTypeName(String orderTypeName) {
+        this.orderTypeName = orderTypeName;
+    }
+
+    public String getPaymentMethodName() {
+        return paymentMethodName;
+    }
+
+    public void setPaymentMethodName(String paymentMethodName) {
+        this.paymentMethodName = paymentMethodName;
     }
 }
