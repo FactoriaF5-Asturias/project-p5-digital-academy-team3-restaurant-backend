@@ -4,23 +4,9 @@
 
 #Problema: Error 403 Forbidden
 
-El endpoint `GET /api/orders` requiere autenticación por la regla de Spring Security:
+Los endpoints `GET /api/orders`, `GET /api/categories` requieren autenticación por la regla de Spring Security:
 
-```java
-.anyRequest().authenticated()
-```
-
-Para probarlo sin autenticación en desarrollo local, añadir en config `SecurityConfig.java`, antes de esa regla:
-
-```java
-.requestMatchers(HttpMethod.GET, "/api/orders").permitAll()
-```
-
-Añadir también el import:
-
-```java
-import org.springframework.http.HttpMethod;
-```
+Para probarlo sin autenticación en desarrollo local, añadir en config `SecurityConfig.java`
 
 > Esta excepción hace público el listado de pedidos. Retirarla después de las pruebas si el endpoint debe requerir autenticación.
 
@@ -36,7 +22,10 @@ bash mvnw spring-boot:run
 Desde otra terminal, consultar el endpoint:
 
 ```bash
-curl -i http://localhost:8080/api/orders
+curl -i http://localhost:8080/api/v1/orders
 ```
-
-**Respuesta esperada:** `200 OK` con los pedidos en formato JSON o `[]` si no hay registros.
+o
+```bash
+curl -i http://localhost:8080/api/v1/categories
+```
+**Respuesta esperada:** `200 OK` con los pedidos/categorias en formato JSON o `[]` si no hay registros.
