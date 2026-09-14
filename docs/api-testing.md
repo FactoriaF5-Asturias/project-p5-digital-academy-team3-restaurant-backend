@@ -13,7 +13,7 @@ El endpoint `GET /api/orders` requiere autenticación por la regla de Spring Sec
 Para probarlo sin autenticación en desarrollo local, añadir en config `SecurityConfig.java`, antes de esa regla:
 
 ```java
-.requestMatchers(HttpMethod.GET, "${api-endpoint}/orders").permitAll()
+.requestMatchers(HttpMethod.GET, "/api/orders").permitAll()
 ```
 
 Añadir también el import:
@@ -36,7 +36,7 @@ bash mvnw spring-boot:run
 Desde otra terminal, consultar el endpoint:
 
 ```bash
-curl -i http://localhost:8080/api/v1/orders
+curl -i http://localhost:8080/api/orders
 ```
 
 **Respuesta esperada:** `200 OK` con los pedidos en formato JSON o `[]` si no hay registros.

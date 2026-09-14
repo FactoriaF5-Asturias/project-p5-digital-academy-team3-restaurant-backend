@@ -11,7 +11,7 @@ import restaurante.team3.Giacobello.orders.service.OrderService;
 import java.util.List;
 
 @RestController
-@RequestMapping("${api-endpoint}/orders")
+@RequestMapping("/api/orders")
 public class OrderController {
 
     private final OrderService orderService;
