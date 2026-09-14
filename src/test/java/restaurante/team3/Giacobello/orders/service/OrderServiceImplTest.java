@@ -35,6 +35,8 @@ class OrderServiceImplTest {
         OrderDTOResponse response = new OrderDTOResponse(
                 1,
                 2,
+                "DINE_IN", 
+                "CARD",
                 "IN_PROGRESS",
                 null,
                 null);
