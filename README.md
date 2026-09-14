@@ -4,7 +4,7 @@
 
 Antes de picar código, necesito tener preparado:
 - [X] Dependencias. ¿Qué necesito? 
-- [ ] Tables para la DB y documentación de campos.
+- [X] Tables para la DB y documentación de campos.
 - [ ] Diagrama Chen y patas de gallo.
 - [X] Lógica de negocio ¿Workflow de cesta? ¿Flujo necesario para MvP?.
 - [ ] Estructura de proyecto.
