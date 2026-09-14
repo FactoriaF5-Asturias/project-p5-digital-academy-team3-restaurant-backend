@@ -46,3 +46,12 @@ Antes de picar código, necesito tener preparado:
 - **WebSocket**: permite actualizaciones en tiempo real del estado del pedido (tracking).
 - **Stripe SDK**: procesa los pagos con tarjeta de crédito/débito.
 - **Email provider**: envía la notificación al cliente cuando el pedido pasa a "en tránsito".
+
+## Documentación API
+
+http://localhost:8080/swagger-ui/index.html
+
+**JSON**
+http://localhost:8080/v3/api-docs
+
+**NOTA**: Para visualizar estos datos el servicio backend debe estar activo.
