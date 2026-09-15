@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,5 +40,12 @@ public class CategoryController {
     @PostMapping
     public ResponseEntity<CategoryDTOResponse> create(@Valid @RequestBody CategoryDTORequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(request));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CategoryDTOResponse> update(
+            @PathVariable Integer id,
+            @Valid @RequestBody CategoryDTORequest request) {
+        return ResponseEntity.ok(categoryService.update(id, request));
     }
 }
