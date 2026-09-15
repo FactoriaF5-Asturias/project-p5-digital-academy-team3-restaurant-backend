@@ -15,9 +15,9 @@ Method - Endpoint - Envia - Recibe
 | [ ]   | DELETE | `/api/products/{id}`          | `id` del producto                                                  | Confirmación de eliminación                  | 404, 409                      |
 | [X]   | GET    | `/api/categories`             | ---                                                                | Lista de categorías                          | 500                           |
 | [ ]   | GET    | `/api/categories/{id}`        | `id` de la categoría                                               | Categoría + productos asociados              | 404                           |
-| [ ]   | POST   | `/api/categories`             | `name`                                                             | Categoría creada                             | 400                           |
-| [ ]   | PUT    | `/api/categories/{id}`        | `id` + `name`                                                      | Categoría actualizada                        | 404, 400, 409                 |
-| [ ]   | DELETE | `/api/categories/{id}`        | `id` de la categoría                                               | Confirmación de eliminación                  | 404, 409                      |
+| [X]   | POST   | `/api/categories`             | `name`                                                             | Categoría creada                             | 400                           |
+| [X]   | PUT    | `/api/categories/{id}`        | `id` + `name`                                                      | Categoría actualizada                        | 404, 400, 409                 |
+| [X]   | DELETE | `/api/categories/{id}`        | `id` de la categoría                                               | Confirmación de eliminación                  | 404, 409                      |
 | [ ]   | GET    | `/api/tablets`                | ---                                                                | Lista de mesas/tablets en restaurante        |  |
 | [ ]   | GET    | `/api/tablets/{id}`           | `id` de la tablet                                                  | Tablet                                       |  |
 | [ ]   | GET    | `/api/payment-methods`        | ---                                                                | Lista de métodos de pago (`CASH`, `CARD`)    |  |
