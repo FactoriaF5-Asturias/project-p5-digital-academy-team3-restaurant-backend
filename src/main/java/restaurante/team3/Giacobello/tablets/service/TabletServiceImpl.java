@@ -4,9 +4,10 @@ import java.util.List;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
 import org.springframework.transaction.annotation.Transactional;
+
 import restaurante.team3.Giacobello.tablets.dtos.TabletDTOResponse;
+import restaurante.team3.Giacobello.tablets.entity.TabletEntity;
 import restaurante.team3.Giacobello.tablets.mappers.TabletMapper;
 import restaurante.team3.Giacobello.tablets.repository.TabletRepository;
 
@@ -29,5 +30,13 @@ public class TabletServiceImpl implements TabletService {
             .toList();
     }
 
-    
+    @Override 
+    @Transactional (readOnly = true)
+    public TabletDTOResponse findById(Integer id) {
+        TabletEntity tablet = tabletRepository.findById(id)
+        .orElseThrow();
+
+        return tabletMapper.toResponse(tablet);
+            
+    }
 }

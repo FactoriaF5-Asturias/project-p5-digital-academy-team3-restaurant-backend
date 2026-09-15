@@ -6,5 +6,5 @@ import restaurante.team3.Giacobello.tablets.dtos.TabletDTOResponse;
 
 public interface TabletService {
     List<TabletDTOResponse> findAll();
-    
+    TabletDTOResponse findById(Integer id);
 }
