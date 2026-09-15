@@ -14,4 +14,5 @@ public interface CategoryService {
 
     CategoryDTOResponse update(Integer id, CategoryDTORequest request);
 
+    void delete(Integer id);
 }

@@ -10,21 +10,26 @@ import restaurante.team3.Giacobello.categories.dto.CategoryDTORequest;
 import restaurante.team3.Giacobello.categories.dto.CategoryDTOResponse;
 import restaurante.team3.Giacobello.categories.entity.CategoryEntity;
 import restaurante.team3.Giacobello.categories.exceptions.CategoryAlreadyExistsException;
+import restaurante.team3.Giacobello.categories.exceptions.CategoryHasProductsException;
 import restaurante.team3.Giacobello.categories.exceptions.CategoryNotFoundException;
 import restaurante.team3.Giacobello.categories.mappers.CategoryMapper;
 import restaurante.team3.Giacobello.categories.repository.CategoryRepository;
+import restaurante.team3.Giacobello.product.repository.ProductRepository;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
+    private final ProductRepository productRepository;
 
     public CategoryServiceImpl(
             CategoryRepository categoryRepository,
-            CategoryMapper categoryMapper) {
+            CategoryMapper categoryMapper,
+            ProductRepository productRepository) {
         this.categoryRepository = categoryRepository;
         this.categoryMapper = categoryMapper;
+        this.productRepository = productRepository;
     }
 
     @Override
@@ -75,5 +80,19 @@ public class CategoryServiceImpl implements CategoryService {
 
         return categoryMapper.toResponse(saved);
 
+    }
+
+    @Override
+    @Transactional
+    public void delete(Integer id) {
+
+        CategoryEntity category = categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException("Category not found with id : " + id));
+
+        if (productRepository.existsByCategoryId(id)) {
+            throw new CategoryHasProductsException("Category has products and cannot be deleted: " + id);
+        }
+
+        categoryRepository.delete(category);
     }
 }

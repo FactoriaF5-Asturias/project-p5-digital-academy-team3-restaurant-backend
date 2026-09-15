@@ -9,4 +9,5 @@ public interface CategoryRepository extends JpaRepository<CategoryEntity, Intege
     boolean existsByName(String name);
 
     boolean existsByNameAndIdNot(String name, Integer id);
+
 }
