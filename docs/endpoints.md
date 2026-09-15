@@ -24,7 +24,7 @@ Method - Endpoint - Envia - Recibe
 | [ ]   | POST   | `/api/payments/create-intent` | `amount`, `currency`, `paymentMethod`                              | `clientSecret` + `paymentIntentId` de Stripe |  |
 | [ ]   | POST   | `/api/orders`                 | `tabletId`, `payment_method_name`, `order_type_name`, `items[]`    | Crear `ORDER` + `ORDER_ITEMS` + `INVOICE`    |  |
 | [X]   | GET    | `/api/orders`                 | ---                                                                | Visualizar lista de Orders                   |  |
-| [ ]   | GET    | `/api/orders/{id}`            | `id` del pedido                                                    | Datos completos del pedido                   |  |
+| [X]   | GET    | `/api/orders/{id}`            | `id` del pedido                                                    | Datos completos del pedido                   |  |
 | [ ]   | PATCH  | `/api/orders/{id}/status`     | `id` del pedido + `status`                                         | Pedido con el nuevo estado                   |  |
 | [ ]   | GET    | `/api/orders/{id}/invoice`    | `id` del pedido                                                    | PDF/datos de la factura                      |  |
 | [ ]   | WS     | `/ws/orders/{id}`             | `id` del pedido                                                    | Actualizaciones del estado en tiempo real    |  |
