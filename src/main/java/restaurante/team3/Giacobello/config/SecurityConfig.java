@@ -19,7 +19,7 @@ public class SecurityConfig {
                         .requestMatchers("/images/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, apiEndpoint + "/products").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, apiEndpoint + "/orders").permitAll()
+                        .requestMatchers(HttpMethod.GET, apiEndpoint + "/orders", apiEndpoint + "/orders/*").permitAll()
                         .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories").permitAll()
                         .anyRequest().authenticated());
         return http.build();
