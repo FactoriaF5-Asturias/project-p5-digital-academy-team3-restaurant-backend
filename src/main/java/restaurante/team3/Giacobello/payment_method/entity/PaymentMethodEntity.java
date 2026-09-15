@@ -26,7 +26,7 @@ public class PaymentMethodEntity {
         this.name = name;
     }
 
-    public Integer getId(Integer id) {
+    public Integer getId() {
         return id;
     }
 
