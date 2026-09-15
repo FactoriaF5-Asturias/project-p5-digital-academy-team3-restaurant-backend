@@ -12,4 +12,6 @@ public interface CategoryService {
 
     CategoryDTOResponse create(CategoryDTORequest request);
 
+    CategoryDTOResponse update(Integer id, CategoryDTORequest request);
+
 }
