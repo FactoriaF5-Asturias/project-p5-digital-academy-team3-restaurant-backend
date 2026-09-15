@@ -24,7 +24,7 @@ import restaurante.team3.Giacobello.orders.repository.OrderItemRepository;
 import restaurante.team3.Giacobello.orders.repository.OrderRepository;
 import restaurante.team3.Giacobello.product.entity.ProductEntity;
 import restaurante.team3.Giacobello.product.repository.ProductRepository;
-//import restaurante.team3.Giacobello.tablets.repository.TabletRepository;
+import restaurante.team3.Giacobello.tablets.repository.TabletRepository;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -34,19 +34,19 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final ProductRepository productRepository;
-    //private final TabletRepository tabletRepository;
+    private final TabletRepository tabletRepository;
     private final OrderItemRepository orderItemRepository;
 
     public OrderServiceImpl(
             OrderRepository orderRepository,
             OrderMapper orderMapper,
             ProductRepository productRepository,
-            //TabletRepository tabletRepository,
+            TabletRepository tabletRepository,
             OrderItemRepository orderItemRepository) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.productRepository = productRepository;
-        //this.tabletRepository = tabletRepository;
+        this.tabletRepository = tabletRepository;
         this.orderItemRepository = orderItemRepository;
     }
 
