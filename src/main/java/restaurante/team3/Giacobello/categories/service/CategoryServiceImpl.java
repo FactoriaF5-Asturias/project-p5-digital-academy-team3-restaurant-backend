@@ -6,8 +6,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import restaurante.team3.Giacobello.categories.dto.CategoryDTORequest;
 import restaurante.team3.Giacobello.categories.dto.CategoryDTOResponse;
 import restaurante.team3.Giacobello.categories.entity.CategoryEntity;
+import restaurante.team3.Giacobello.categories.exceptions.CategoryAlreadyExistsException;
 import restaurante.team3.Giacobello.categories.exceptions.CategoryNotFoundException;
 import restaurante.team3.Giacobello.categories.mappers.CategoryMapper;
 import restaurante.team3.Giacobello.categories.repository.CategoryRepository;
@@ -41,5 +43,19 @@ public class CategoryServiceImpl implements CategoryService {
                 .orElseThrow(() -> new CategoryNotFoundException("Category not found with id : " + id));
 
         return categoryMapper.toResponse(category);
+    }
+
+    @Override
+    @Transactional
+    public CategoryDTOResponse create(CategoryDTORequest request) {
+
+        if (categoryRepository.existsByName(request.name())) {
+            throw new CategoryAlreadyExistsException("Category already exists with name: " + request.name());
+        }
+
+        CategoryEntity entity = categoryMapper.toEntity(request);
+        CategoryEntity saved = categoryRepository.save(entity);
+
+        return categoryMapper.toResponse(saved);
     }
 }
