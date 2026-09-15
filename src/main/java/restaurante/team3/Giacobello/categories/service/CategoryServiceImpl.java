@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import restaurante.team3.Giacobello.categories.dto.CategoryDTOResponse;
+import restaurante.team3.Giacobello.categories.entity.CategoryEntity;
+import restaurante.team3.Giacobello.categories.exceptions.CategoryNotFoundException;
 import restaurante.team3.Giacobello.categories.mappers.CategoryMapper;
 import restaurante.team3.Giacobello.categories.repository.CategoryRepository;
 
@@ -30,5 +32,14 @@ public class CategoryServiceImpl implements CategoryService {
                 .stream()
                 .map(categoryMapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public CategoryDTOResponse findById(Integer id) {
+        CategoryEntity category = categoryRepository.findById(id)
+                .orElseThrow(() -> new CategoryNotFoundException("Category not found with id : " + id));
+
+        return categoryMapper.toResponse(category);
     }
 }
