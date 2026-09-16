@@ -11,9 +11,10 @@ import restaurante.team3.Giacobello.product.entity.ProductEntity;
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
 
-    @Mapping(source = "category.name", target = "category")
-
     ProductDTOResponse toDto(ProductEntity entity);
-
+    
+    @Mapping(source = "category.name", target = "category")
     List<ProductDTOResponse> toDtoList(List<ProductEntity> entities);
+
+    
 }
