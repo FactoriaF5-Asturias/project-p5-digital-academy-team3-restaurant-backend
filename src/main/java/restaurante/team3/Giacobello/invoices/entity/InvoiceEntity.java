@@ -33,6 +33,17 @@ public class InvoiceEntity {
     protected InvoiceEntity() {
     }
 
+    public InvoiceEntity(
+            Integer orderId,
+            String invoiceNumber,
+            BigDecimal totalAmount,
+            LocalDateTime issuedAt) {
+        this.orderId = orderId;
+        this.invoiceNumber = invoiceNumber;
+        this.totalAmount = totalAmount;
+        this.issuedAt = issuedAt;
+    }
+
     public Integer getId() {
         return id;
     }

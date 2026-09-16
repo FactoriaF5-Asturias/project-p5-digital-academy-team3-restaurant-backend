@@ -22,6 +22,8 @@ import restaurante.team3.Giacobello.orders.entity.OrderItemEntity;
 import restaurante.team3.Giacobello.orders.mappers.OrderMapper;
 import restaurante.team3.Giacobello.orders.repository.OrderItemRepository;
 import restaurante.team3.Giacobello.orders.repository.OrderRepository;
+import restaurante.team3.Giacobello.invoices.entity.InvoiceEntity;
+import restaurante.team3.Giacobello.invoices.repository.InvoiceRepository;
 import restaurante.team3.Giacobello.product.entity.ProductEntity;
 import restaurante.team3.Giacobello.product.repository.ProductRepository;
 import restaurante.team3.Giacobello.tablets.repository.TabletRepository;
@@ -36,18 +38,21 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final TabletRepository tabletRepository;
     private final OrderItemRepository orderItemRepository;
+    private final InvoiceRepository invoiceRepository;
 
     public OrderServiceImpl(
             OrderRepository orderRepository,
             OrderMapper orderMapper,
             ProductRepository productRepository,
             TabletRepository tabletRepository,
-            OrderItemRepository orderItemRepository) {
+            OrderItemRepository orderItemRepository,
+            InvoiceRepository invoiceRepository) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.productRepository = productRepository;
         this.tabletRepository = tabletRepository;
         this.orderItemRepository = orderItemRepository;
+        this.invoiceRepository = invoiceRepository;
     }
 
     @Override
@@ -144,6 +149,11 @@ public class OrderServiceImpl implements OrderService {
         OrderEntity savedOrder = orderRepository.save(order);
         orderItemRepository.saveAll(lines);
         savedOrder.getItems().addAll(lines);
+        invoiceRepository.save(new InvoiceEntity(
+            savedOrder.getId(),
+            "INV-" + savedOrder.getId(),
+            savedOrder.getTotalAmount(),
+            LocalDateTime.now()));
         return orderMapper.toResponse(savedOrder);
     }
 
