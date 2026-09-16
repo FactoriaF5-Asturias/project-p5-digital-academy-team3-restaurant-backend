@@ -11,7 +11,7 @@ import restaurante.team3.Giacobello.invoices.dto.InvoiceDTOResponse;
 import restaurante.team3.Giacobello.invoices.service.InvoiceService;
 
 @RestController
-@RequestMapping("${api-endpoint}/orders")
+@RequestMapping("${api-endpoint}")
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
@@ -20,7 +20,7 @@ public class InvoiceController {
         this.invoiceService = invoiceService;
     }
 
-    @GetMapping("/{id}/invoice")
+    @GetMapping("/orders/{id}/invoice")
     public ResponseEntity<InvoiceDTOResponse> findByOrderId(
             @PathVariable("id") Integer orderId) {
         return ResponseEntity.ok(
