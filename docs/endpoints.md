@@ -161,8 +161,10 @@ curl -i http://localhost:8080/api/v1/orders/5/invoice
 
 La URL usa el ID del pedido (`5`), no el ID de la factura (`3`).
 Si el pedido no existe o no tiene factura, devuelve **404 Not Found**.
-Crear un pedido con el POST actual no crea automáticamente una factura: para
-probar el resultado correcto debe existir una factura asociada en `invoices`.
+Al crear un pedido válido mediante `POST /api/v1/orders`, el backend crea de
+forma atómica la factura asociada en `invoices`, con el total del pedido y su
+fecha de emisión. Por tanto, el `orderId` devuelto por el POST se puede usar
+directamente en este endpoint.
 
 5. Si aparece **403**, comprobar que el perfil `local` está activo y la ruta está
    permitida en `SecurityConfig`. Si aparece **404** en el listado, revisar la URL
@@ -170,6 +172,14 @@ probar el resultado correcto debe existir una factura asociada en `invoices`.
    el backend está arrancado en el puerto `8080`.
 ## Notas
 
+- **`createdAt` de los pedidos** se devuelve en formato ISO-8601, por ejemplo
+  `2026-09-16T22:44:26`, tanto para `GET /api/v1/orders` como para
+  `GET /api/v1/orders/{id}`.
+- **Borrado físico de pedidos mediante SQL**: las migraciones `V19` y `V20` configuran
+  las FK de `order_items.order_id` e `invoices.order_id` con `ON DELETE CASCADE`.
+  Por tanto, al ejecutar `DELETE FROM orders WHERE id = <id>;` se eliminan también
+  sus líneas y su factura. Los productos asociados no se eliminan. Actualmente no
+  existe un endpoint HTTP `DELETE /api/v1/orders/{id}`.
 - **`DELETE /api/products/{id}` no borra la fila**: pone `status` a `false` (soft delete). La FK
   `order_items.product_id` impide borrar un producto que ya aparece en algún pedido, y borrarlo
   rompería pedidos y facturas ya emitidas. Por eso el DELETE no devuelve 409: siempre puede
