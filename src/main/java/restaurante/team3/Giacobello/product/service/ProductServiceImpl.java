@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import restaurante.team3.Giacobello.product.dtos.ProductDTOResponse;
+import restaurante.team3.Giacobello.product.entity.ProductEntity;
 import restaurante.team3.Giacobello.product.mappers.ProductMapper;
 import restaurante.team3.Giacobello.product.repository.ProductRepository;
 
@@ -30,5 +31,13 @@ public class ProductServiceImpl implements ProductService {
             .stream()
             .map(productMapper::toDto)
             .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ProductDTOResponse findById(Integer id) {
+        ProductEntity product = productRepository.findById(id)
+            .orElseThrow();
+        return productMapper.toDto(product);
     }
 }

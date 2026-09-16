@@ -5,5 +5,5 @@ import restaurante.team3.Giacobello.product.dtos.ProductDTOResponse;
 
 public interface ProductService {
     List<ProductDTOResponse> findAll();
-    
+    ProductDTOResponse findById(Integer id);
 }
