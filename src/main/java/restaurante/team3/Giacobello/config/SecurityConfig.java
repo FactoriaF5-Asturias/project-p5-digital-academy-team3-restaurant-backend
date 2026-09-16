@@ -32,7 +32,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, apiEndpoint + "/tablets/*").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories").permitAll()
 
-                        .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories/*").permitAll();
+                      .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories/*").permitAll()
+                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/paymentmethod").permitAll();
             if (local) {
                 auth.requestMatchers(
                         HttpMethod.POST,

@@ -9,7 +9,7 @@ Method - Endpoint - Envia - Recibe
 | Hecho | Method | Endpoint                      | Da                                                                 | Recibe                                       | Errores       |
 | ----- | ------ | ----------------------------- | ------------------------------------------------------------------ | -------------------------------------------- | ------------- |
 | [X]   | GET    | `/api/products`               | ---                                                                | Lista de productos activos                   | 500           |
-| [ ]   | GET    | `/api/products/{id}`          | `id` del producto                                                  | Producto                                     | 404, 400      |
+| [X]   | GET    | `/api/products/{id}`          | `id` del producto                                                  | Producto                                     | 404, 400      |
 | [ ]   | POST   | `/api/products`               | `name`, `description`, `categoryId`, `price`, `imageURL`, `status` | Producto creado                              | 400, 404, 409 |
 | [ ]   | PUT    | `/api/products/{id}`          | `id` + datos del producto a modificar                              | Producto actualizado                         | 400, 404, 409 |
 | [ ]   | DELETE | `/api/products/{id}`          | `id` del producto                                                  | Confirmación de eliminación                  | 404, 409      |
@@ -20,7 +20,7 @@ Method - Endpoint - Envia - Recibe
 | [X]   | DELETE | `/api/categories/{id}`        | `id` de la categoría                                               | Confirmación de eliminación                  | 404, 409      |
 | [X]   | GET    | `/api/tablets`                | ---                                                                | Lista de mesas/tablets en restaurante        |               |
 | [X]   | GET    | `/api/tablets/{id}`           | `id` de la tablet                                                  | Tablet                                       |               |
-| [ ]   | GET    | `/api/payment-methods`        | ---                                                                | Lista de métodos de pago (`CASH`, `CARD`)    |               |
+| [X]   | GET    | `/api/payment-methods`        | ---                                                                | Lista de métodos de pago (`CASH`, `CARD`)    |               |
 | [ ]   | POST   | `/api/payments/create-intent` | `amount`, `currency`, `paymentMethod`                              | `clientSecret` + `paymentIntentId` de Stripe |               |
 | [X]   | POST   | `/api/orders`                 | `tabletId`, `payment_method_name`, `order_type_name`, `items[]`    | Crear `ORDER` + `ORDER_ITEMS` + `INVOICE`    |               |
 | [X]   | GET    | `/api/orders`                 | ---                                                                | Visualizar lista de Orders                   |               |
