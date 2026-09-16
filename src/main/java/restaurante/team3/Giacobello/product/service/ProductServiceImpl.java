@@ -36,7 +36,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductDTOResponse> findAll() {
-        return productRepository.findAll(Sort.by("name").ascending())
+        return productRepository.findAllByStatusTrue(Sort.by("name").ascending())
                 .stream()
                 .map(productMapper::toDto)
                 .toList();
@@ -87,6 +87,18 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity saved = productRepository.save(product);
 
         return productMapper.toDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public void delete(Integer id) {
+
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id : " + id));
+
+        product.setStatus(false);
+
+        productRepository.save(product);
     }
 
 }

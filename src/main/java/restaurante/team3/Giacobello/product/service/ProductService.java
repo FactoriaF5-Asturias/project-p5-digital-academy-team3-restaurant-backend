@@ -12,4 +12,6 @@ public interface ProductService {
 
     ProductDTOResponse update(Integer id, ProductDTORequest request);
 
+    void delete(Integer id);
+
 }
