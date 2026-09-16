@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import restaurante.team3.Giacobello.categories.exceptions.CategoryAlreadyExistsException;
 import restaurante.team3.Giacobello.categories.exceptions.CategoryHasProductsException;
 import restaurante.team3.Giacobello.categories.exceptions.CategoryNotFoundException;
+import restaurante.team3.Giacobello.product.exceptions.ProductAlreadyExistsException;
+import restaurante.team3.Giacobello.product.exceptions.ProductNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -40,6 +42,30 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CategoryHasProductsException.class)
     public ResponseEntity<ApiErrorResponse> handleCategoryHasProducts(CategoryHasProductsException ex) {
+
+        ApiErrorResponse body = new ApiErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                HttpStatus.CONFLICT.getReasonPhrase(),
+                ex.getMessage(),
+                LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleProductNotFound(ProductNotFoundException ex) {
+
+        ApiErrorResponse body = new ApiErrorResponse(
+                HttpStatus.NOT_FOUND.value(),
+                HttpStatus.NOT_FOUND.getReasonPhrase(),
+                ex.getMessage(),
+                LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(ProductAlreadyExistsException.class)
+    public ResponseEntity<ApiErrorResponse> handleProductAlreadyExists(ProductAlreadyExistsException ex) {
 
         ApiErrorResponse body = new ApiErrorResponse(
                 HttpStatus.CONFLICT.value(),

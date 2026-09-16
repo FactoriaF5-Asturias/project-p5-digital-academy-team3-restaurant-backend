@@ -24,6 +24,7 @@ public class SecurityConfig {
             auth
                     .requestMatchers("/images/**", "/error").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/products").permitAll()
+                    .requestMatchers(HttpMethod.GET, apiEndpoint + "/products/*").permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/orders", apiEndpoint + "/orders/*").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/tablets").permitAll()
@@ -31,6 +32,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories/*").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/invoices").permitAll();
+                    .requestMatchers(HttpMethod.GET, apiEndpoint + "/paymentmethod").permitAll();
             if (local) {
                 auth.requestMatchers(
                         HttpMethod.POST,
