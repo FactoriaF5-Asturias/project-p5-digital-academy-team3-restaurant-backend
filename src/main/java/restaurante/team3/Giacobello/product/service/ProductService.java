@@ -14,4 +14,5 @@ public interface ProductService {
 
     void delete(Integer id);
 
+    ProductDTOResponse findById(Integer id);
 }

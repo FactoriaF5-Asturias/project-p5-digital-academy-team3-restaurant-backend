@@ -101,4 +101,10 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(product);
     }
 
+    @Transactional(readOnly = true)
+    public ProductDTOResponse findById(Integer id) {
+        ProductEntity product = productRepository.findById(id)
+            .orElseThrow();
+        return productMapper.toDto(product);
+    }
 }
