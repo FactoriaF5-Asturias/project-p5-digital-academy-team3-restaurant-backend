@@ -1,5 +1,6 @@
 package restaurante.team3.Giacobello.invoices.controller;
 
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,5 +25,10 @@ public class InvoiceController {
             @PathVariable("id") Integer orderId) {
         return ResponseEntity.ok(
                 invoiceService.findByOrderId(orderId));
+    }
+
+    @GetMapping("/invoices")
+    public ResponseEntity<List<InvoiceDTOResponse>> findAll() {
+        return ResponseEntity.ok(invoiceService.findAll());
     }
 }
