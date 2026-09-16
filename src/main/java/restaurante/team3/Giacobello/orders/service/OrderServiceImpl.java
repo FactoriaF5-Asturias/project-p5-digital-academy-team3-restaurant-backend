@@ -143,7 +143,7 @@ public class OrderServiceImpl implements OrderService {
 
         OrderEntity savedOrder = orderRepository.save(order);
         orderItemRepository.saveAll(lines);
-
+        savedOrder.getItems().addAll(lines);
         return orderMapper.toResponse(savedOrder);
     }
 

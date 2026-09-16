@@ -1,11 +1,16 @@
 package restaurante.team3.Giacobello.orders.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -110,5 +115,13 @@ public class OrderEntity {
 
     public void setPaymentMethodName(String paymentMethodName) {
         this.paymentMethodName = paymentMethodName;
+    }
+
+    @OneToMany(mappedBy = "order")
+    @OrderBy("id ASC")
+    private List<OrderItemEntity> items = new ArrayList<>();
+
+    public List<OrderItemEntity> getItems() {
+        return items;
     }
 }
