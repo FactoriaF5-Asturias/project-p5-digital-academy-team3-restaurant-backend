@@ -1,9 +1,18 @@
 package restaurante.team3.Giacobello.product.service;
 
 import java.util.List;
+
+import restaurante.team3.Giacobello.product.dtos.ProductDTORequest;
 import restaurante.team3.Giacobello.product.dtos.ProductDTOResponse;
 
 public interface ProductService {
     List<ProductDTOResponse> findAll();
+
+    ProductDTOResponse create(ProductDTORequest request);
+
+    ProductDTOResponse update(Integer id, ProductDTORequest request);
+
+    void delete(Integer id);
+
     ProductDTOResponse findById(Integer id);
 }

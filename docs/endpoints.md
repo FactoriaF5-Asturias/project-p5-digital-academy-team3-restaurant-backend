@@ -10,11 +10,11 @@ Method - Endpoint - Envia - Recibe
 | ----- | ------ | ----------------------------- | ------------------------------------------------------------------ | -------------------------------------------- | ------------- |
 | [X]   | GET    | `/api/products`               | ---                                                                | Lista de productos activos                   | 500           |
 | [X]   | GET    | `/api/products/{id}`          | `id` del producto                                                  | Producto                                     | 404, 400      |
-| [ ]   | POST   | `/api/products`               | `name`, `description`, `categoryId`, `price`, `imageURL`, `status` | Producto creado                              | 400, 404, 409 |
-| [ ]   | PUT    | `/api/products/{id}`          | `id` + datos del producto a modificar                              | Producto actualizado                         | 400, 404, 409 |
-| [ ]   | DELETE | `/api/products/{id}`          | `id` del producto                                                  | Confirmación de eliminación                  | 404, 409      |
+| [X]   | POST   | `/api/products`               | `name`, `description`, `categoryId`, `price`, `imageURL`, `status` | Producto creado                              | 400, 404, 409                 |
+| [X]   | PUT    | `/api/products/{id}`          | `id` + datos del producto a modificar                              | Producto actualizado                         | 400, 404, 409                 |
+| [X]   | DELETE | `/api/products/{id}`          | `id` del producto                                                  | 204 sin contenido (soft delete: `status` a false) | 404                      |
 | [X]   | GET    | `/api/categories`             | ---                                                                | Lista de categorías                          | 500           |
-| [ ]   | GET    | `/api/categories/{id}`        | `id` de la categoría                                               | Categoría + productos asociados              | 404           |
+| [X]   | GET    | `/api/categories/{id}`        | `id` de la categoría                                               | Categoría (`id` + `name`)                    | 404                           |
 | [X]   | POST   | `/api/categories`             | `name`                                                             | Categoría creada                             | 400           |
 | [X]   | PUT    | `/api/categories/{id}`        | `id` + `name`                                                      | Categoría actualizada                        | 404, 400, 409 |
 | [X]   | DELETE | `/api/categories/{id}`        | `id` de la categoría                                               | Confirmación de eliminación                  | 404, 409      |
@@ -65,3 +65,12 @@ Content-Type: application/json
 }
 ```
 4. Respuesta tiene quer ser: 201 ok, significa que el order ha sido creado. Para verlo usar otro endpoint GET api/v1/orders o GET /api/orders/{id}.
+
+## Notas
+
+- **`DELETE /api/products/{id}` no borra la fila**: pone `status` a `false` (soft delete). La FK
+  `order_items.product_id` impide borrar un producto que ya aparece en algún pedido, y borrarlo
+  rompería pedidos y facturas ya emitidas. Por eso el DELETE no devuelve 409: siempre puede
+  desactivar.
+- **`GET /api/products` solo devuelve productos activos** (`status = true`), en coherencia con lo
+  anterior.
