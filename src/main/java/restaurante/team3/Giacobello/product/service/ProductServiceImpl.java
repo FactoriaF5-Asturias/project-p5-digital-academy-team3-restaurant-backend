@@ -13,6 +13,7 @@ import restaurante.team3.Giacobello.product.dtos.ProductDTORequest;
 import restaurante.team3.Giacobello.product.dtos.ProductDTOResponse;
 import restaurante.team3.Giacobello.product.entity.ProductEntity;
 import restaurante.team3.Giacobello.product.exceptions.ProductAlreadyExistsException;
+import restaurante.team3.Giacobello.product.exceptions.ProductNotFoundException;
 import restaurante.team3.Giacobello.product.mappers.ProductMapper;
 import restaurante.team3.Giacobello.product.repository.ProductRepository;
 
@@ -57,6 +58,33 @@ public class ProductServiceImpl implements ProductService {
         entity.setCategory(category);
 
         ProductEntity saved = productRepository.save(entity);
+
+        return productMapper.toDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public ProductDTOResponse update(Integer id, ProductDTORequest request) {
+
+        ProductEntity product = productRepository.findById(id)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id : " + id));
+
+        if (productRepository.existsByNameAndIdNot(request.name(), id)) {
+            throw new ProductAlreadyExistsException("Product already exists with name: " + request.name());
+        }
+
+        CategoryEntity category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new CategoryNotFoundException(
+                        "Category not found with id : " + request.categoryId()));
+
+        product.setName(request.name());
+        product.setDescription(request.description());
+        product.setCategory(category);
+        product.setPrice(request.price());
+        product.setStatus(request.status());
+        product.setImageUrl(request.imageUrl());
+
+        ProductEntity saved = productRepository.save(product);
 
         return productMapper.toDto(saved);
     }

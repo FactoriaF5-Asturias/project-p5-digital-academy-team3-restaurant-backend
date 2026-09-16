@@ -10,4 +10,6 @@ public interface ProductService {
 
     ProductDTOResponse create(ProductDTORequest request);
 
+    ProductDTOResponse update(Integer id, ProductDTORequest request);
+
 }
