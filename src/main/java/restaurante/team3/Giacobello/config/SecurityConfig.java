@@ -6,11 +6,26 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
+
+    @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+            CorsConfiguration config = new CorsConfiguration();
+            config.setAllowedOrigins(List.of("http://localhost:5173"));
+            config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+            config.setAllowedHeaders(List.of("*"));
+            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+            source.registerCorsConfiguration("/**", config);
+            return source;
+        }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -18,8 +33,9 @@ public class SecurityConfig {
             Environment environment,
             @Value("${api-endpoint}") String apiEndpoint) throws Exception {
 
-        boolean local = environment.acceptsProfiles(Profiles.of("local"));
+        http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
+        boolean local = environment.acceptsProfiles(Profiles.of("local"));
         http.authorizeHttpRequests(auth -> {
             auth
                     .requestMatchers("/images/**", "/error").permitAll()
