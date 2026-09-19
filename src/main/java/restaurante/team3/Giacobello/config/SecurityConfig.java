@@ -17,15 +17,15 @@ import java.util.List;
 public class SecurityConfig {
 
     @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
-            CorsConfiguration config = new CorsConfiguration();
-            config.setAllowedOrigins(List.of("http://localhost:5173"));
-            config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-            config.setAllowedHeaders(List.of("*"));
-            UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-            source.registerCorsConfiguration("/**", config);
-            return source;
-        }
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:5173"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("*"));
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -56,14 +56,27 @@ public class SecurityConfig {
                 auth.requestMatchers(
                         HttpMethod.GET,
                         apiEndpoint + "/orders/*/invoice").permitAll();
+                auth.requestMatchers(
+                        HttpMethod.PUT,
+                        apiEndpoint + "/orders/*/status").permitAll();
             }
             auth.anyRequest().authenticated();
         });
 
         if (local) {
-            http.csrf(csrf -> csrf.ignoringRequestMatchers(request -> "POST".equals(request.getMethod())
-                    && (apiEndpoint + "/orders")
-                            .equals(request.getServletPath())));
+            http.csrf(csrf -> csrf.ignoringRequestMatchers(request -> {
+                String method = request.getMethod();
+                String path = request.getServletPath();
+
+                boolean isCreateOrder = "POST".equals(method)
+                        && (apiEndpoint + "/orders").equals(path);
+
+                boolean isUpdateOrderStatus = "PUT".equals(method)
+                        && path.startsWith(apiEndpoint + "/orders/")
+                        && path.endsWith("/status");
+
+                return isCreateOrder || isUpdateOrderStatus;
+            }));
         }
         return http.build();
     }
