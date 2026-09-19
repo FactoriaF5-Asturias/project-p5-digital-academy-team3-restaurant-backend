@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.Locale;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import org.springframework.web.server.ResponseStatusException;
 import restaurante.team3.Giacobello.orders.dto.OrderCreateDTORequest;
 import restaurante.team3.Giacobello.orders.dto.OrderDTOResponse;
 import restaurante.team3.Giacobello.orders.dto.OrderItemCreateDTORequest;
+import restaurante.team3.Giacobello.orders.dto.OrderStatusUpdateDTORequest;
 import restaurante.team3.Giacobello.orders.entity.OrderEntity;
 import restaurante.team3.Giacobello.orders.entity.OrderItemEntity;
 import restaurante.team3.Giacobello.orders.mappers.OrderMapper;
@@ -32,7 +35,13 @@ import restaurante.team3.Giacobello.tablets.repository.TabletRepository;
 public class OrderServiceImpl implements OrderService {
 
     private static final BigDecimal MAX_TOTAL = new BigDecimal("99999999.99");
-
+    private static final Set<String> ALLOWED_STATUS_NAMES = Set.of(
+            "PENDING",
+            "CANCELLED",
+            "ACCEPTED",
+            "COMPLETED",
+            "DELAYED",
+            "IN PROGRESS");
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final ProductRepository productRepository;
@@ -150,10 +159,10 @@ public class OrderServiceImpl implements OrderService {
         orderItemRepository.saveAll(lines);
         savedOrder.getItems().addAll(lines);
         invoiceRepository.save(new InvoiceEntity(
-            savedOrder.getId(),
-            "INV-" + savedOrder.getId(),
-            savedOrder.getTotalAmount(),
-            LocalDateTime.now()));
+                savedOrder.getId(),
+                "INV-" + savedOrder.getId(),
+                savedOrder.getTotalAmount(),
+                LocalDateTime.now()));
         return orderMapper.toResponse(savedOrder);
     }
 
@@ -202,5 +211,32 @@ public class OrderServiceImpl implements OrderService {
                         "No se puede repetir un producto; aumenta su cantidad");
             }
         }
+    }
+
+    @Override
+    @Transactional
+    public OrderDTOResponse updateStatus(
+            Integer id,
+            OrderStatusUpdateDTORequest request) {
+        OrderEntity order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No existe el pedido con ID " + id));
+
+        String statusName = request.statusName()
+                .trim()
+                .toUpperCase(Locale.ROOT);
+
+        if (!ALLOWED_STATUS_NAMES.contains(statusName)) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Estado no válido: " + request.statusName());
+        }
+
+        order.setStatusName(statusName);
+
+        OrderEntity savedOrder = orderRepository.save(order);
+
+        return orderMapper.toResponse(savedOrder);
     }
 }
