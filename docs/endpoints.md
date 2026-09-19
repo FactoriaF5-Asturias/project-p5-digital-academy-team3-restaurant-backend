@@ -6,29 +6,29 @@ Aqui vamos a representar todas las rutas endpoint
 
 Method - Endpoint - Envia - Recibe
 
-| Hecho | Method | Endpoint                      | Da                                                                 | Recibe                                       | Errores       |
-| ----- | ------ | ----------------------------- | ------------------------------------------------------------------ | -------------------------------------------- | ------------- |
-| [X]   | GET    | `/api/products`               | ---                                                                | Lista de productos activos                   | 500           |
-| [X]   | GET    | `/api/products/{id}`          | `id` del producto                                                  | Producto                                     | 404, 400      |
-| [X]   | POST   | `/api/products`               | `name`, `description`, `categoryId`, `price`, `imageURL`, `status` | Producto creado                              | 400, 404, 409                 |
-| [X]   | PUT    | `/api/products/{id}`          | `id` + datos del producto a modificar                              | Producto actualizado                         | 400, 404, 409                 |
-| [X]   | DELETE | `/api/products/{id}`          | `id` del producto                                                  | 204 sin contenido (soft delete: `status` a false) | 404                      |
-| [X]   | GET    | `/api/categories`             | ---                                                                | Lista de categorías                          | 500           |
-| [X]   | GET    | `/api/categories/{id}`        | `id` de la categoría                                               | Categoría (`id` + `name`)                    | 404                           |
-| [X]   | POST   | `/api/categories`             | `name`                                                             | Categoría creada                             | 400           |
-| [X]   | PUT    | `/api/categories/{id}`        | `id` + `name`                                                      | Categoría actualizada                        | 404, 400, 409 |
-| [X]   | DELETE | `/api/categories/{id}`        | `id` de la categoría                                               | Confirmación de eliminación                  | 404, 409      |
-| [X]   | GET    | `/api/tablets`                | ---                                                                | Lista de mesas/tablets en restaurante        |               |
-| [X]   | GET    | `/api/tablets/{id}`           | `id` de la tablet                                                  | Tablet                                       |               |
-| [X]   | GET    | `/api/payment-methods`        | ---                                                                | Lista de métodos de pago (`CASH`, `CARD`)    |               |
-| [ ]   | POST   | `/api/payments/create-intent` | `amount`, `currency`, `paymentMethod`                              | `clientSecret` + `paymentIntentId` de Stripe |               |
-| [X]   | POST   | `/api/orders`                 | `tabletId`, `payment_method_name`, `order_type_name`, `items[]`    | Crear `ORDER` + `ORDER_ITEMS`    |               |
-| [X]   | GET    | `/api/orders`                 | ---                                                                | Visualizar lista de Orders                   |               |
-| [X]   | GET    | `/api/orders/{id}`            | `id` del pedido                                                    | Datos completos del pedido                   |               |
-| [ ]   | PATCH  | `/api/orders/{id}/status`     | `id` del pedido + `status`                                         | Pedido con el nuevo estado                   |               |
-| [X]   | GET    | `/api/orders/{id}/invoice`    | `id` del pedido                                                    | Datos de la factura en JSON                      |               |
-| [X]   | GET    | `/api/invoices`              | ---                                                                | Lista de facturas en JSON                    | 500           |
-| [ ]   | WS     | `/ws/orders/{id}`             | `id` del pedido                                                    | Actualizaciones del estado en tiempo real    |               |
+| Hecho | Method | Endpoint                      | Da                                                                 | Recibe                                            | Errores       |
+| ----- | ------ | ----------------------------- | ------------------------------------------------------------------ | ------------------------------------------------- | ------------- |
+| [X]   | GET    | `/api/products`               | ---                                                                | Lista de productos activos                        | 500           |
+| [X]   | GET    | `/api/products/{id}`          | `id` del producto                                                  | Producto                                          | 404, 400      |
+| [X]   | POST   | `/api/products`               | `name`, `description`, `categoryId`, `price`, `imageURL`, `status` | Producto creado                                   | 400, 404, 409 |
+| [X]   | PUT    | `/api/products/{id}`          | `id` + datos del producto a modificar                              | Producto actualizado                              | 400, 404, 409 |
+| [X]   | DELETE | `/api/products/{id}`          | `id` del producto                                                  | 204 sin contenido (soft delete: `status` a false) | 404           |
+| [X]   | GET    | `/api/categories`             | ---                                                                | Lista de categorías                               | 500           |
+| [X]   | GET    | `/api/categories/{id}`        | `id` de la categoría                                               | Categoría (`id` + `name`)                         | 404           |
+| [X]   | POST   | `/api/categories`             | `name`                                                             | Categoría creada                                  | 400           |
+| [X]   | PUT    | `/api/categories/{id}`        | `id` + `name`                                                      | Categoría actualizada                             | 404, 400, 409 |
+| [X]   | DELETE | `/api/categories/{id}`        | `id` de la categoría                                               | Confirmación de eliminación                       | 404, 409      |
+| [X]   | GET    | `/api/tablets`                | ---                                                                | Lista de mesas/tablets en restaurante             |               |
+| [X]   | GET    | `/api/tablets/{id}`           | `id` de la tablet                                                  | Tablet                                            |               |
+| [X]   | GET    | `/api/payment-methods`        | ---                                                                | Lista de métodos de pago (`CASH`, `CARD`)         |               |
+| [ ]   | POST   | `/api/payments/create-intent` | `amount`, `currency`, `paymentMethod`                              | `clientSecret` + `paymentIntentId` de Stripe      |               |
+| [X]   | POST   | `/api/orders`                 | `tabletId`, `payment_method_name`, `order_type_name`, `items[]`    | Crear `ORDER` + `ORDER_ITEMS`                     |               |
+| [X]   | GET    | `/api/orders`                 | ---                                                                | Visualizar lista de Orders                        |               |
+| [X]   | GET    | `/api/orders/{id}`            | `id` del pedido                                                    | Datos completos del pedido                        |               |
+| [X]   | PUT    | `/api/orders/{id}/status`     | `id` del pedido + `status`                                         | Pedido con el nuevo estado                        |               |
+| [X]   | GET    | `/api/orders/{id}/invoice`    | `id` del pedido                                                    | Datos de la factura en JSON                       |               |
+| [X]   | GET    | `/api/invoices`               | ---                                                                | Lista de facturas en JSON                         | 500           |
+| [ ]   | WS     | `/ws/orders/{id}`             | `id` del pedido                                                    | Actualizaciones del estado en tiempo real         |               |
 
 ## Probar peticiones de endpoints
 
@@ -45,12 +45,12 @@ mvn spring-boot:run \
   -Dspring-boot.run.profiles=local \
   -Dspring-boot.run.jvmArguments="-DDATABASE_USERNAME=postgres -DDATABASE_PASSWORD=postgres"
 ```
+
 2. Comprobar que el header de peticion contiene:
 
 Content-Type: application/json
 
 3. Enviar el body con los siguientes datos(ESTO ES UN EJEMPLO):
-
 
 ```
 {
@@ -69,7 +69,21 @@ Content-Type: application/json
   ]
 }
 ```
+
 4. Respuesta tiene quer ser: 201 ok, significa que el order ha sido creado. Para verlo usar otro endpoint GET api/v1/orders o GET /api/orders/{id}.
+
+#### PUT /api/v1/orders/{id}/status
+
+1. Insertar id del pedido del que hay qie cambiar el status.
+2. Enviar el body con los siguientes datos y eligiendo raw ->JSON:
+
+```
+{
+  "statusName": "ACCEPTED"
+}
+```
+
+3. Resultado esperado: 200 OK y el pedido con statusName: "ACCEPTED". Para verlo usar otro endpoint GET api/v1/orders o GET /api/orders/{id}.
 
 ### Probar peticiones de facturas
 
@@ -112,7 +126,7 @@ curl -i http://localhost:8080/api/v1/invoices
     "id": 3,
     "orderId": 5,
     "invoiceNumber": "TEST-5",
-    "totalAmount": 25.00,
+    "totalAmount": 25.0,
     "issuedAt": "2026-09-16T12:00:00"
   }
 ]
@@ -154,7 +168,7 @@ curl -i http://localhost:8080/api/v1/orders/5/invoice
   "id": 3,
   "orderId": 5,
   "invoiceNumber": "TEST-5",
-  "totalAmount": 25.00,
+  "totalAmount": 25.0,
   "issuedAt": "2026-09-16T12:00:00"
 }
 ```
@@ -170,6 +184,7 @@ directamente en este endpoint.
    permitida en `SecurityConfig`. Si aparece **404** en el listado, revisar la URL
    y reiniciar el backend después de los cambios. Si no conecta, comprobar que
    el backend está arrancado en el puerto `8080`.
+
 ## Notas
 
 - **`createdAt` de los pedidos** se devuelve en formato ISO-8601, por ejemplo
