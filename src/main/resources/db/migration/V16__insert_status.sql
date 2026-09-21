@@ -4,4 +4,6 @@ INSERT INTO status (
 ('PENDING'),
 ('CANCELLED'),
 ('ACCEPTED'),
-('COMPLETED');
+('COMPLETED'),
+('DELAYED'),
+('IN PROGRESS');
