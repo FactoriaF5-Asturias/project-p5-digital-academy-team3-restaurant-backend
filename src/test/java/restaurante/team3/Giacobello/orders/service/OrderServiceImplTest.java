@@ -42,7 +42,7 @@ class OrderServiceImplTest {
                                 2,
                                 "DINE_IN",
                                 "CARD",
-                                "IN_PROGRESS",
+                                "IN PROGRESS",
                                 null,
                                 null,
                                 List.of());
