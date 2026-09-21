@@ -187,8 +187,7 @@ directamente en este endpoint.
 
 ## Notas
 
-- **`createdAt` de los pedidos** se devuelve en formato ISO-8601, por ejemplo
-  `2026-09-16T22:44:26`, tanto para `GET /api/v1/orders` como para
+- **`createdAt` de los pedidos** se devuelve en formato `2026-09-16T22:44:26`, tanto para `GET /api/v1/orders` como para
   `GET /api/v1/orders/{id}`.
 - **Borrado físico de pedidos mediante SQL**: las migraciones `V19` y `V20` configuran
   las FK de `order_items.order_id` e `invoices.order_id` con `ON DELETE CASCADE`.

@@ -1,3 +1,0 @@
-INSERT INTO status (name)
-VALUES ('DELAYED')
-ON CONFLICT (name) DO NOTHING;

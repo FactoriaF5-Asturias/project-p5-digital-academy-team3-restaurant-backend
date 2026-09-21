@@ -8,7 +8,8 @@ CREATE TABLE order_items (
 
     CONSTRAINT fk_order_id
         FOREIGN KEY(order_id)
-        REFERENCES orders(id),
+        REFERENCES orders(id)
+        ON DELETE CASCADE,
 
     CONSTRAINT fk_product_id
         FOREIGN KEY(product_id)

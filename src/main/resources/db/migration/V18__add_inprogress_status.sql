@@ -1,3 +1,0 @@
-INSERT INTO status (name)
-VALUES ('IN PROGRESS')
-ON CONFLICT (name) DO NOTHING;

@@ -7,6 +7,20 @@ Se ha decidido realizar el flujo de usuario completo desde menu hasta realizar l
 **Workflow**: Frontend > Seguridad > Controller > Service > Repository > DB
 
 ### TABLAS OBLIGATORIAS PARA MVP
+- USERS_AUTH
+    - id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+    - email VARCHAR(255) NOT NULL UNIQUE
+    - password_hash TEXT NOT NULL
+    - created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+- USERS_ROLE
+    - id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+    - name VARCHAR(20) UNIQUE NOT NULL
+- USERS_DETAILS
+    - user_id INTEGER PRIMARY KEY FK
+    - nickname VARCHAR(60) NOT NULL UNIQUE
+    - avatar_url TEXT NULL
+    - role_id INTEGER
+    - updated_at TIMESTAMP
 - PRODUCTS: catálogo de producto
     - id PK
     - name VARCHAR
@@ -61,6 +75,8 @@ Atajos:
 
 
 ### Modelo Entidad-Relación
+USERS_AUTH 1:1 USERS_DETAILS
+USERS_DETAILS N:1 USERS_ROLE
 
 TABLETS 1:N ORDERS
 ORDERS 1:N ORDER_ITEMS
