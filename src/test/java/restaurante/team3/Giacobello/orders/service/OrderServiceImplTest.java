@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,14 @@ import restaurante.team3.Giacobello.orders.dto.OrderDTOResponse;
 import restaurante.team3.Giacobello.orders.entity.OrderEntity;
 import restaurante.team3.Giacobello.orders.mappers.OrderMapper;
 import restaurante.team3.Giacobello.orders.repository.OrderRepository;
+import restaurante.team3.Giacobello.orders.repository.OrderItemRepository;
+import restaurante.team3.Giacobello.orders.dto.OrderCreateDTORequest;
+import restaurante.team3.Giacobello.orders.dto.OrderItemCreateDTORequest;
+import restaurante.team3.Giacobello.invoices.entity.InvoiceEntity;
+import restaurante.team3.Giacobello.invoices.repository.InvoiceRepository;
+import restaurante.team3.Giacobello.product.entity.ProductEntity;
+import restaurante.team3.Giacobello.product.repository.ProductRepository;
+import restaurante.team3.Giacobello.tablets.repository.TabletRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -21,6 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTest {
@@ -29,10 +40,63 @@ class OrderServiceImplTest {
         private OrderRepository orderRepository;
 
         @Mock
+        private OrderItemRepository orderItemRepository;
+
+        @Mock
         private OrderMapper orderMapper;
+
+        @Mock
+        private ProductRepository productRepository;
+
+        @Mock
+        private TabletRepository tabletRepository;
+
+        @Mock
+        private InvoiceRepository invoiceRepository;
 
         @InjectMocks
         private OrderServiceImpl orderService;
+
+        @Test
+        void shouldCreateInvoiceWhenOrderIsCreated() {
+                ProductEntity product = org.mockito.Mockito.mock(ProductEntity.class);
+                OrderCreateDTORequest request = new OrderCreateDTORequest(
+                                2,
+                                "DINE IN",
+                                "CASH",
+                                List.of(new OrderItemCreateDTORequest(4, 2)));
+                OrderDTOResponse response = new OrderDTOResponse(
+                                7,
+                                2,
+                                "DINE IN",
+                                "CASH",
+                                "PENDING",
+                                new java.math.BigDecimal("25.00"),
+                                null,
+                                List.of());
+
+                when(tabletRepository.existsById(2)).thenReturn(true);
+                when(productRepository.findAllById(List.of(4))).thenReturn(List.of(product));
+                when(product.getId()).thenReturn(4);
+                when(product.getPrice()).thenReturn(new java.math.BigDecimal("12.50"));
+                when(product.getStatus()).thenReturn(true);
+                doAnswer(invocation -> {
+                        OrderEntity order = invocation.getArgument(0);
+                        order.setId(7);
+                        return order;
+                }).when(orderRepository).save(any(OrderEntity.class));
+                when(orderMapper.toResponse(any(OrderEntity.class))).thenReturn(response);
+
+                orderService.create(request);
+
+                ArgumentCaptor<InvoiceEntity> invoiceCaptor = ArgumentCaptor.forClass(InvoiceEntity.class);
+                verify(invoiceRepository).save(invoiceCaptor.capture());
+                InvoiceEntity invoice = invoiceCaptor.getValue();
+                assertEquals(7, invoice.getOrderId());
+                assertEquals("INV-7", invoice.getInvoiceNumber());
+                assertEquals(new java.math.BigDecimal("25.00"), invoice.getTotalAmount());
+                org.junit.jupiter.api.Assertions.assertNotNull(invoice.getIssuedAt());
+        }
 
         @Test
         void shouldReturnAllOrders() {
