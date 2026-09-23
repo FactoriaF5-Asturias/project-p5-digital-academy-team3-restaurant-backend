@@ -35,6 +35,7 @@ public class SecurityConfig {
 
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
+        boolean devProfile = environment.acceptsProfiles(Profiles.of("dev"));
         http.authorizeHttpRequests(auth -> {
             auth
                     .requestMatchers("/images/**", "/error").permitAll()
@@ -48,7 +49,8 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories/*").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/invoices").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/paymentmethod").permitAll();
-                    auth.requestMatchers(
+            if (devProfile) {
+                auth.requestMatchers(
                         HttpMethod.POST,
                         apiEndpoint + "/orders").permitAll();
                     if (environment.acceptsProfiles(Profiles.of("local"))) {
@@ -62,9 +64,10 @@ public class SecurityConfig {
             auth.anyRequest().authenticated();
         });
 
-        http.csrf(csrf -> csrf.ignoringRequestMatchers(request -> {
-            String method = request.getMethod();
-            String path = request.getServletPath();
+        if (devProfile) {
+            http.csrf(csrf -> csrf.ignoringRequestMatchers(request -> {
+                String method = request.getMethod();
+                String path = request.getServletPath();
 
             boolean isCreateOrder = "POST".equals(method)
                     && (apiEndpoint + "/orders").equals(path);
