@@ -35,7 +35,6 @@ public class SecurityConfig {
 
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
-        boolean local = environment.acceptsProfiles(Profiles.of("local"));
         http.authorizeHttpRequests(auth -> {
             auth
                     .requestMatchers("/images/**", "/error").permitAll()
@@ -49,10 +48,10 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories/*").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/invoices").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/paymentmethod").permitAll();
-            if (local) {
-                auth.requestMatchers(
+                    auth.requestMatchers(
                         HttpMethod.POST,
                         apiEndpoint + "/orders").permitAll();
+                    if (environment.acceptsProfiles(Profiles.of("local"))) {
                 auth.requestMatchers(
                         HttpMethod.GET,
                         apiEndpoint + "/orders/*/invoice").permitAll();
@@ -63,21 +62,19 @@ public class SecurityConfig {
             auth.anyRequest().authenticated();
         });
 
-        if (local) {
-            http.csrf(csrf -> csrf.ignoringRequestMatchers(request -> {
-                String method = request.getMethod();
-                String path = request.getServletPath();
+        http.csrf(csrf -> csrf.ignoringRequestMatchers(request -> {
+            String method = request.getMethod();
+            String path = request.getServletPath();
 
-                boolean isCreateOrder = "POST".equals(method)
-                        && (apiEndpoint + "/orders").equals(path);
+            boolean isCreateOrder = "POST".equals(method)
+                    && (apiEndpoint + "/orders").equals(path);
 
-                boolean isUpdateOrderStatus = "PUT".equals(method)
-                        && path.startsWith(apiEndpoint + "/orders/")
-                        && path.endsWith("/status");
+            boolean isUpdateOrderStatus = "PUT".equals(method)
+                    && path.startsWith(apiEndpoint + "/orders/")
+                    && path.endsWith("/status");
 
-                return isCreateOrder || isUpdateOrderStatus;
-            }));
-        }
+            return isCreateOrder || isUpdateOrderStatus;
+        }));
         return http.build();
     }
 }
