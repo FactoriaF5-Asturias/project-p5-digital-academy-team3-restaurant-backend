@@ -35,7 +35,7 @@ public class SecurityConfig {
 
         http.cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
-        boolean local = environment.acceptsProfiles(Profiles.of("local"));
+        boolean devProfile = environment.acceptsProfiles(Profiles.of("dev"));
         http.authorizeHttpRequests(auth -> {
             auth
                     .requestMatchers("/images/**", "/error").permitAll()
@@ -49,7 +49,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories/*").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/invoices").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/paymentmethod").permitAll();
-            if (local) {
+            if (devProfile) {
                 auth.requestMatchers(
                         HttpMethod.POST,
                         apiEndpoint + "/orders").permitAll();
@@ -63,7 +63,7 @@ public class SecurityConfig {
             auth.anyRequest().authenticated();
         });
 
-        if (local) {
+        if (devProfile) {
             http.csrf(csrf -> csrf.ignoringRequestMatchers(request -> {
                 String method = request.getMethod();
                 String path = request.getServletPath();
