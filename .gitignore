@@ -35,4 +35,5 @@ build/
 
 ### Documentos a ignorar ###
 *db-docu.md
+*docker-arranque-testcontainer.md
 historias_usuario/
