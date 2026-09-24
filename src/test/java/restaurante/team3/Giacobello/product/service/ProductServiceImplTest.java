@@ -40,4 +40,15 @@ class ProductServiceImplTest {
         assertEquals(List.of(dto), result);
     }
 
+    @Test
+    void findAllReturnsEmptyListWhenNoProducts() {
+        when(productRepository.findAllByStatusTrue(Sort.by("name").ascending()))
+                .thenReturn(List.of());
+
+        List<ProductDTOResponse> result = service.findAll();
+
+        assertEquals(List.of(), result);
+
+
+    }
 }
