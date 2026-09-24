@@ -2,6 +2,8 @@ package restaurante.team3.Giacobello.product.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
@@ -50,5 +52,16 @@ class ProductServiceImplTest {
         assertEquals(List.of(), result);
 
 
+    }
+
+    @Test
+    void findAllOnlyRequestsActiveProducts() {
+        when(productRepository.findAllByStatusTrue(Sort.by("name").ascending()))
+                .thenReturn(List.of());
+
+        service.findAll();
+
+        verify(productRepository).findAllByStatusTrue(Sort.by("name").ascending());
+        verify(productRepository, never()).findAll();
     }
 }
