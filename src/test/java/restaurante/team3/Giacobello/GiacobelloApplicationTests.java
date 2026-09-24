@@ -1,10 +1,10 @@
 package restaurante.team3.Giacobello;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class GiacobelloApplicationTests {
+import restaurante.team3.Giacobello.infrastructure.IntegrationTest;
+
+class GiacobelloApplicationTests extends IntegrationTest {
 
 	@Test
 	void contextLoads() {
