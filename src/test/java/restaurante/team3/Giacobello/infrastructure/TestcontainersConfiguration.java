@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @TestConfiguration(proxyBeanMethods = false)
-public class TestContainers {
+public class TestcontainersConfiguration {
 
     @SuppressWarnings("resource")
     @Bean
