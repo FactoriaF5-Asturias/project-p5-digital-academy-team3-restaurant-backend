@@ -7,8 +7,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import restaurante.team3.Giacobello.infrastructure.IntegrationTest;
+import restaurante.team3.Giacobello.product.repository.ProductRepository;
 
 class ProductControllerIntegrationTest extends IntegrationTest {
 
@@ -45,5 +47,19 @@ class ProductControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$[0].price").value(60.0))
                 .andExpect(jsonPath("$[0].status").value(true))
                 .andExpect(jsonPath("$[0].imageUrl").value("/images/products/Acqua_di_localhost.jpg"));
+    }
+
+    @Autowired
+    private ProductRepository productRepository;
+
+    @Test
+    @Transactional
+    void findAllReturnsEmptyListWhenNoProducts() throws Exception {
+        productRepository.deleteAll();
+
+        mockMvc.perform(get("/api/v1/products"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
     }
 }
