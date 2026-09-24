@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.categories.dto;
+package restaurante.team3.giacobello.categories.dto;
 
 public record CategoryDTOResponse(
         Integer id,

@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.exceptions;
+package restaurante.team3.giacobello.exceptions;
 
 import java.time.LocalDateTime;
 

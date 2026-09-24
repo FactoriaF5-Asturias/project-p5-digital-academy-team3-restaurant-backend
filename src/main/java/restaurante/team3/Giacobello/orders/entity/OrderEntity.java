@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.orders.entity;
+package restaurante.team3.giacobello.orders.entity;
 
 import java.util.ArrayList;
 import java.util.List;

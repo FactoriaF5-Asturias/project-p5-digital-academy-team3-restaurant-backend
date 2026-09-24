@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.product.exceptions;
+package restaurante.team3.giacobello.product.exceptions;
 
 public class ProductNotFoundException extends RuntimeException {
     public ProductNotFoundException(String message) {

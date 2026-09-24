@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.tablets.service;
+package restaurante.team3.giacobello.tablets.service;
 
 import java.util.List;
 
@@ -6,10 +6,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import restaurante.team3.Giacobello.tablets.dtos.TabletDTOResponse;
-import restaurante.team3.Giacobello.tablets.entity.TabletEntity;
-import restaurante.team3.Giacobello.tablets.mappers.TabletMapper;
-import restaurante.team3.Giacobello.tablets.repository.TabletRepository;
+import restaurante.team3.giacobello.tablets.dtos.TabletDTOResponse;
+import restaurante.team3.giacobello.tablets.entity.TabletEntity;
+import restaurante.team3.giacobello.tablets.mappers.TabletMapper;
+import restaurante.team3.giacobello.tablets.repository.TabletRepository;
 
 @Service 
 public class TabletServiceImpl implements TabletService {

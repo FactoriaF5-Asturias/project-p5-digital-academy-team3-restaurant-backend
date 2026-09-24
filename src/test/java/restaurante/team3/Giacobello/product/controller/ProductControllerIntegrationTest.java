@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.product.controller;
+package restaurante.team3.giacobello.product.controller;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -9,9 +9,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import restaurante.team3.Giacobello.infrastructure.IntegrationTest;
-import restaurante.team3.Giacobello.product.entity.ProductEntity;
-import restaurante.team3.Giacobello.product.repository.ProductRepository;
+import restaurante.team3.giacobello.infrastructure.IntegrationTest;
+import restaurante.team3.giacobello.product.entity.ProductEntity;
+import restaurante.team3.giacobello.product.repository.ProductRepository;
 
 class ProductControllerIntegrationTest extends IntegrationTest {
 

@@ -1,9 +1,9 @@
-package restaurante.team3.Giacobello.product.service;
+package restaurante.team3.giacobello.product.service;
 
 import java.util.List;
 
-import restaurante.team3.Giacobello.product.dtos.ProductDTORequest;
-import restaurante.team3.Giacobello.product.dtos.ProductDTOResponse;
+import restaurante.team3.giacobello.product.dtos.ProductDTORequest;
+import restaurante.team3.giacobello.product.dtos.ProductDTOResponse;
 
 public interface ProductService {
     List<ProductDTOResponse> findAll();

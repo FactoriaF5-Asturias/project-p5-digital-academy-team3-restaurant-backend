@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.infrastructure;
+package restaurante.team3.giacobello.infrastructure;
 
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;

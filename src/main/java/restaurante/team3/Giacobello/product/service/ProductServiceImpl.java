@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.product.service;
+package restaurante.team3.giacobello.product.service;
 
 import java.util.List;
 
@@ -6,16 +6,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import restaurante.team3.Giacobello.categories.repository.CategoryRepository;
-import restaurante.team3.Giacobello.categories.entity.CategoryEntity;
-import restaurante.team3.Giacobello.categories.exceptions.CategoryNotFoundException;
-import restaurante.team3.Giacobello.product.dtos.ProductDTORequest;
-import restaurante.team3.Giacobello.product.dtos.ProductDTOResponse;
-import restaurante.team3.Giacobello.product.entity.ProductEntity;
-import restaurante.team3.Giacobello.product.exceptions.ProductAlreadyExistsException;
-import restaurante.team3.Giacobello.product.exceptions.ProductNotFoundException;
-import restaurante.team3.Giacobello.product.mappers.ProductMapper;
-import restaurante.team3.Giacobello.product.repository.ProductRepository;
+import restaurante.team3.giacobello.categories.entity.CategoryEntity;
+import restaurante.team3.giacobello.categories.exceptions.CategoryNotFoundException;
+import restaurante.team3.giacobello.categories.repository.CategoryRepository;
+import restaurante.team3.giacobello.product.dtos.ProductDTORequest;
+import restaurante.team3.giacobello.product.dtos.ProductDTOResponse;
+import restaurante.team3.giacobello.product.entity.ProductEntity;
+import restaurante.team3.giacobello.product.exceptions.ProductAlreadyExistsException;
+import restaurante.team3.giacobello.product.exceptions.ProductNotFoundException;
+import restaurante.team3.giacobello.product.mappers.ProductMapper;
+import restaurante.team3.giacobello.product.repository.ProductRepository;
 
 @Service
 public class ProductServiceImpl implements ProductService {

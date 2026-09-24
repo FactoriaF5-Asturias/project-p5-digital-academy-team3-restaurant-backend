@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.tablets.controller;
+package restaurante.team3.giacobello.tablets.controller;
 
 import java.util.List;
 
@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import restaurante.team3.Giacobello.tablets.dtos.TabletDTOResponse;
-import restaurante.team3.Giacobello.tablets.service.TabletService;
+import restaurante.team3.giacobello.tablets.dtos.TabletDTOResponse;
+import restaurante.team3.giacobello.tablets.service.TabletService;
 
 @RestController 
 @RequestMapping("${api-endpoint}/tablets")

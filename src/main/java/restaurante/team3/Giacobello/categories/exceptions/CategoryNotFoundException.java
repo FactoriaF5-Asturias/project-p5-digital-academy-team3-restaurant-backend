@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.categories.exceptions;
+package restaurante.team3.giacobello.categories.exceptions;
 
 public class CategoryNotFoundException extends RuntimeException {
     public CategoryNotFoundException(String message) {

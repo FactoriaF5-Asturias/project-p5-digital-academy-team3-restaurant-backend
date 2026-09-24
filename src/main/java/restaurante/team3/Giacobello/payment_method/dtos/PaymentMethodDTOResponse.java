@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.payment_method.dtos;
+package restaurante.team3.giacobello.payment_method.dtos;
 
 public record PaymentMethodDTOResponse(
     Integer id,

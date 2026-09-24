@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.infrastructure;
+package restaurante.team3.giacobello.infrastructure;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;

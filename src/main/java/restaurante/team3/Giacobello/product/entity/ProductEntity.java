@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.product.entity;
+package restaurante.team3.giacobello.product.entity;
 
 import java.math.BigDecimal;
 
@@ -10,8 +10,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-
-import restaurante.team3.Giacobello.categories.entity.CategoryEntity;
+import restaurante.team3.giacobello.categories.entity.CategoryEntity;
 
 @Entity
 @Table(name = "products")

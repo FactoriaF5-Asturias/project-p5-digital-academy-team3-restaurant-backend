@@ -1,8 +1,8 @@
-package restaurante.team3.Giacobello.tablets.service;
+package restaurante.team3.giacobello.tablets.service;
 
 import java.util.List;
 
-import restaurante.team3.Giacobello.tablets.dtos.TabletDTOResponse;
+import restaurante.team3.giacobello.tablets.dtos.TabletDTOResponse;
 
 public interface TabletService {
     List<TabletDTOResponse> findAll();

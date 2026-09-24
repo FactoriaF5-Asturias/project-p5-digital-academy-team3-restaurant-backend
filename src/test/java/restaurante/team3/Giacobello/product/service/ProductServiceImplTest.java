@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.product.service;
+package restaurante.team3.giacobello.product.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -12,11 +12,12 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
 
-import restaurante.team3.Giacobello.categories.repository.CategoryRepository;
-import restaurante.team3.Giacobello.product.dtos.ProductDTOResponse;
-import restaurante.team3.Giacobello.product.entity.ProductEntity;
-import restaurante.team3.Giacobello.product.mappers.ProductMapper;
-import restaurante.team3.Giacobello.product.repository.ProductRepository;
+import restaurante.team3.giacobello.categories.repository.CategoryRepository;
+import restaurante.team3.giacobello.product.dtos.ProductDTOResponse;
+import restaurante.team3.giacobello.product.entity.ProductEntity;
+import restaurante.team3.giacobello.product.mappers.ProductMapper;
+import restaurante.team3.giacobello.product.repository.ProductRepository;
+import restaurante.team3.giacobello.product.service.ProductServiceImpl;
 
 class ProductServiceImplTest {
 

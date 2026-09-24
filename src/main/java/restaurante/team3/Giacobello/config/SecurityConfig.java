@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.config;
+package restaurante.team3.giacobello.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

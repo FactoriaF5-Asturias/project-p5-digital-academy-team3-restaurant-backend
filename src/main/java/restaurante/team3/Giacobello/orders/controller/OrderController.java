@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.orders.controller;
+package restaurante.team3.giacobello.orders.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,10 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import jakarta.validation.Valid;
-import restaurante.team3.Giacobello.orders.dto.OrderCreateDTORequest;
-import restaurante.team3.Giacobello.orders.dto.OrderDTOResponse;
-import restaurante.team3.Giacobello.orders.dto.OrderStatusUpdateDTORequest;
-import restaurante.team3.Giacobello.orders.service.OrderService;
+import restaurante.team3.giacobello.orders.dto.OrderCreateDTORequest;
+import restaurante.team3.giacobello.orders.dto.OrderDTOResponse;
+import restaurante.team3.giacobello.orders.dto.OrderStatusUpdateDTORequest;
+import restaurante.team3.giacobello.orders.service.OrderService;
 
 import java.net.URI;
 import java.util.List;
