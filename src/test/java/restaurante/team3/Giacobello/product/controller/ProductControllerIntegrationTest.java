@@ -10,6 +10,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import restaurante.team3.Giacobello.infrastructure.IntegrationTest;
+import restaurante.team3.Giacobello.product.entity.ProductEntity;
 import restaurante.team3.Giacobello.product.repository.ProductRepository;
 
 class ProductControllerIntegrationTest extends IntegrationTest {
@@ -61,5 +62,18 @@ class ProductControllerIntegrationTest extends IntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
+    }
+
+    @Test
+    @Transactional
+    void findAllExcludesUnavailableProducts() throws Exception {
+        ProductEntity acqua = productRepository.findById(10).orElseThrow();
+        acqua.setStatus(false);
+        productRepository.saveAndFlush(acqua);
+
+        mockMvc.perform(get("/api/v1/products"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(11))
+                .andExpect(jsonPath("$[0].name").value("AI a la Carte"));
     }
 }
