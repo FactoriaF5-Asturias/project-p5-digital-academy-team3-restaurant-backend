@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.tablets.dtos;
+package restaurante.team3.giacobello.tablets.dtos;
 
 public record TabletDTOResponse(
         Integer id,

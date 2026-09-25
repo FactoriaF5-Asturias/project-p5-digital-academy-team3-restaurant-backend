@@ -1,12 +1,12 @@
-package restaurante.team3.Giacobello.orders.mappers;
+package restaurante.team3.giacobello.orders.mappers;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import restaurante.team3.Giacobello.orders.dto.OrderDTOResponse;
-import restaurante.team3.Giacobello.orders.dto.OrderItemDTOResponse;
-import restaurante.team3.Giacobello.orders.entity.OrderEntity;
-import restaurante.team3.Giacobello.orders.entity.OrderItemEntity;
+import restaurante.team3.giacobello.orders.dto.OrderDTOResponse;
+import restaurante.team3.giacobello.orders.dto.OrderItemDTOResponse;
+import restaurante.team3.giacobello.orders.entity.OrderEntity;
+import restaurante.team3.giacobello.orders.entity.OrderItemEntity;
 
 @Mapper(componentModel = "spring")
 public interface OrderMapper {

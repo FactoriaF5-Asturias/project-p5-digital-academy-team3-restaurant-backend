@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.invoices.entity;
+package restaurante.team3.giacobello.invoices.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

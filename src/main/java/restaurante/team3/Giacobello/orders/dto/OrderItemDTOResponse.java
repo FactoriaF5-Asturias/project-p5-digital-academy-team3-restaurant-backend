@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.orders.dto;
+package restaurante.team3.giacobello.orders.dto;
 
 import java.math.BigDecimal;
 

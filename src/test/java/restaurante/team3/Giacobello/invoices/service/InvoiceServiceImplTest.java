@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.invoices.service;
+package restaurante.team3.giacobello.invoices.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,10 +12,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import restaurante.team3.Giacobello.invoices.dto.InvoiceDTOResponse;
-import restaurante.team3.Giacobello.invoices.entity.InvoiceEntity;
-import restaurante.team3.Giacobello.invoices.mappers.InvoiceMapper;
-import restaurante.team3.Giacobello.invoices.repository.InvoiceRepository;
+import restaurante.team3.giacobello.invoices.dto.InvoiceDTOResponse;
+import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
+import restaurante.team3.giacobello.invoices.mappers.InvoiceMapper;
+import restaurante.team3.giacobello.invoices.repository.InvoiceRepository;
+import restaurante.team3.giacobello.invoices.service.InvoiceServiceImpl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;

@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.invoices.service;
+package restaurante.team3.giacobello.invoices.service;
 
 import java.util.List;
 import org.springframework.data.domain.Sort;
@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import restaurante.team3.Giacobello.invoices.dto.InvoiceDTOResponse;
-import restaurante.team3.Giacobello.invoices.entity.InvoiceEntity;
-import restaurante.team3.Giacobello.invoices.mappers.InvoiceMapper;
-import restaurante.team3.Giacobello.invoices.repository.InvoiceRepository;
+import restaurante.team3.giacobello.invoices.dto.InvoiceDTOResponse;
+import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
+import restaurante.team3.giacobello.invoices.mappers.InvoiceMapper;
+import restaurante.team3.giacobello.invoices.repository.InvoiceRepository;
 
 @Service
 public class InvoiceServiceImpl implements InvoiceService {

@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.invoices.controller;
+package restaurante.team3.giacobello.invoices.controller;
 
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import restaurante.team3.Giacobello.invoices.dto.InvoiceDTOResponse;
-import restaurante.team3.Giacobello.invoices.service.InvoiceService;
+import restaurante.team3.giacobello.invoices.dto.InvoiceDTOResponse;
+import restaurante.team3.giacobello.invoices.service.InvoiceService;
 
 @RestController
 @RequestMapping("${api-endpoint}")

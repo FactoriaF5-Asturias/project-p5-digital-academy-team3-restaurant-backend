@@ -1,8 +1,11 @@
-package restaurante.team3.Giacobello.categories.controller;
+package restaurante.team3.giacobello.categories.controller;
 
 import java.util.List;
 
 import jakarta.validation.Valid;
+import restaurante.team3.giacobello.categories.dto.CategoryDTORequest;
+import restaurante.team3.giacobello.categories.dto.CategoryDTOResponse;
+import restaurante.team3.giacobello.categories.service.CategoryService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +17,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import restaurante.team3.Giacobello.categories.dto.CategoryDTORequest;
-import restaurante.team3.Giacobello.categories.dto.CategoryDTOResponse;
-import restaurante.team3.Giacobello.categories.service.CategoryService;
 
 @RestController
 @RequestMapping("${api-endpoint}/categories")

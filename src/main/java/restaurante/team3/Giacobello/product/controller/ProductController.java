@@ -1,8 +1,11 @@
-package restaurante.team3.Giacobello.product.controller;
+package restaurante.team3.giacobello.product.controller;
 
 import java.util.List;
 
 import jakarta.validation.Valid;
+import restaurante.team3.giacobello.product.dtos.ProductDTORequest;
+import restaurante.team3.giacobello.product.dtos.ProductDTOResponse;
+import restaurante.team3.giacobello.product.service.ProductService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,10 +17,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import restaurante.team3.Giacobello.product.dtos.ProductDTORequest;
-import restaurante.team3.Giacobello.product.dtos.ProductDTOResponse;
-import restaurante.team3.Giacobello.product.service.ProductService;
 
 @RestController
 @RequestMapping("${api-endpoint}/products")

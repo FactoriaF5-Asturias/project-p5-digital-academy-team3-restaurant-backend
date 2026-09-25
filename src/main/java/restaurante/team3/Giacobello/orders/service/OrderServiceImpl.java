@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.orders.service;
+package restaurante.team3.giacobello.orders.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,20 +16,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import restaurante.team3.Giacobello.orders.dto.OrderCreateDTORequest;
-import restaurante.team3.Giacobello.orders.dto.OrderDTOResponse;
-import restaurante.team3.Giacobello.orders.dto.OrderItemCreateDTORequest;
-import restaurante.team3.Giacobello.orders.dto.OrderStatusUpdateDTORequest;
-import restaurante.team3.Giacobello.orders.entity.OrderEntity;
-import restaurante.team3.Giacobello.orders.entity.OrderItemEntity;
-import restaurante.team3.Giacobello.orders.mappers.OrderMapper;
-import restaurante.team3.Giacobello.orders.repository.OrderItemRepository;
-import restaurante.team3.Giacobello.orders.repository.OrderRepository;
-import restaurante.team3.Giacobello.invoices.entity.InvoiceEntity;
-import restaurante.team3.Giacobello.invoices.repository.InvoiceRepository;
-import restaurante.team3.Giacobello.product.entity.ProductEntity;
-import restaurante.team3.Giacobello.product.repository.ProductRepository;
-import restaurante.team3.Giacobello.tablets.repository.TabletRepository;
+import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
+import restaurante.team3.giacobello.invoices.repository.InvoiceRepository;
+import restaurante.team3.giacobello.orders.dto.OrderCreateDTORequest;
+import restaurante.team3.giacobello.orders.dto.OrderDTOResponse;
+import restaurante.team3.giacobello.orders.dto.OrderItemCreateDTORequest;
+import restaurante.team3.giacobello.orders.dto.OrderStatusUpdateDTORequest;
+import restaurante.team3.giacobello.orders.entity.OrderEntity;
+import restaurante.team3.giacobello.orders.entity.OrderItemEntity;
+import restaurante.team3.giacobello.orders.mappers.OrderMapper;
+import restaurante.team3.giacobello.orders.repository.OrderItemRepository;
+import restaurante.team3.giacobello.orders.repository.OrderRepository;
+import restaurante.team3.giacobello.product.entity.ProductEntity;
+import restaurante.team3.giacobello.product.repository.ProductRepository;
+import restaurante.team3.giacobello.tablets.repository.TabletRepository;
 
 @Service
 public class OrderServiceImpl implements OrderService {

@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.payment_method.entity;
+package restaurante.team3.giacobello.payment_method.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

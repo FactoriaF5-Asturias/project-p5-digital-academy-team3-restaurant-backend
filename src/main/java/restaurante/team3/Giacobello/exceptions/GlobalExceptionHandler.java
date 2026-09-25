@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.exceptions;
+package restaurante.team3.giacobello.exceptions;
 
 import java.time.LocalDateTime;
 
@@ -7,11 +7,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import restaurante.team3.Giacobello.categories.exceptions.CategoryAlreadyExistsException;
-import restaurante.team3.Giacobello.categories.exceptions.CategoryHasProductsException;
-import restaurante.team3.Giacobello.categories.exceptions.CategoryNotFoundException;
-import restaurante.team3.Giacobello.product.exceptions.ProductAlreadyExistsException;
-import restaurante.team3.Giacobello.product.exceptions.ProductNotFoundException;
+import restaurante.team3.giacobello.categories.exceptions.CategoryAlreadyExistsException;
+import restaurante.team3.giacobello.categories.exceptions.CategoryHasProductsException;
+import restaurante.team3.giacobello.categories.exceptions.CategoryNotFoundException;
+import restaurante.team3.giacobello.product.exceptions.ProductAlreadyExistsException;
+import restaurante.team3.giacobello.product.exceptions.ProductNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {

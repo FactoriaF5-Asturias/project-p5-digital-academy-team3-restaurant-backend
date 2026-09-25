@@ -1,11 +1,11 @@
-package restaurante.team3.Giacobello.categories.mappers;
+package restaurante.team3.giacobello.categories.mappers;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import restaurante.team3.Giacobello.categories.dto.CategoryDTORequest;
-import restaurante.team3.Giacobello.categories.dto.CategoryDTOResponse;
-import restaurante.team3.Giacobello.categories.entity.CategoryEntity;
+import restaurante.team3.giacobello.categories.dto.CategoryDTORequest;
+import restaurante.team3.giacobello.categories.dto.CategoryDTOResponse;
+import restaurante.team3.giacobello.categories.entity.CategoryEntity;
 
 @Mapper(componentModel = "spring")
 public interface CategoryMapper {

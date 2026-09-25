@@ -1,8 +1,8 @@
-package restaurante.team3.Giacobello.categories.repository;
+package restaurante.team3.giacobello.categories.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import restaurante.team3.Giacobello.categories.entity.CategoryEntity;
+import restaurante.team3.giacobello.categories.entity.CategoryEntity;
 
 public interface CategoryRepository extends JpaRepository<CategoryEntity, Integer> {
 

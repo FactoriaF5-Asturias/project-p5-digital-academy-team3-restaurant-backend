@@ -1,8 +1,8 @@
-package restaurante.team3.Giacobello;
+package restaurante.team3.giacobello;
 
 import org.junit.jupiter.api.Test;
 
-import restaurante.team3.Giacobello.infrastructure.IntegrationTest;
+import restaurante.team3.giacobello.infrastructure.IntegrationTest;
 
 class GiacobelloApplicationTests extends IntegrationTest {
 

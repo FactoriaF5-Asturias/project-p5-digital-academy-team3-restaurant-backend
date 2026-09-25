@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello.payment_method.service;
+package restaurante.team3.giacobello.payment_method.service;
 
 import java.util.List;
 
@@ -6,9 +6,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import restaurante.team3.Giacobello.payment_method.dtos.PaymentMethodDTOResponse;
-import restaurante.team3.Giacobello.payment_method.mappers.PaymentMethodMapper;
-import restaurante.team3.Giacobello.payment_method.repository.PaymentMethodRepository;
+import restaurante.team3.giacobello.payment_method.dtos.PaymentMethodDTOResponse;
+import restaurante.team3.giacobello.payment_method.mappers.PaymentMethodMapper;
+import restaurante.team3.giacobello.payment_method.repository.PaymentMethodRepository;
 
 @Service
 public class PaymentMethodServiceImpl implements PaymentMethodService {
