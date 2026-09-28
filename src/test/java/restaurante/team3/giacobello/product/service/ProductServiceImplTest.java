@@ -171,4 +171,12 @@ class ProductServiceImplTest {
                 assertEquals(new BigDecimal("10.00"), product.getPrice());
                 assertSame(category, product.getCategory());
         }
+
+        @Test
+        void updateThrowsWhenProductDoesNotExist() {
+                when(productRepository.findById(99)).thenReturn(Optional.empty());
+
+                assertThrows(ProductNotFoundException.class, () -> service.update(99, request));
+                verify(productRepository, never()).save(any());
+        }
 }
