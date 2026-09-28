@@ -122,4 +122,14 @@ class CategoryServiceImplTest {
         assertThrows(CategoryNotFoundException.class, () -> service.update(99, request));
         verify(repository, never()).save(any());
     }
+
+    @Test
+    void updateThrowsWhenNameBelongsToAnotherCategory() {
+        CategoryDTORequest request = new CategoryDTORequest("Postres");
+        when(repository.findById(1)).thenReturn(Optional.of(new CategoryEntity(1, "Pizzas")));
+        when(repository.existsByNameAndIdNot("Postres", 1)).thenReturn(true);
+
+        assertThrows(CategoryAlreadyExistsException.class, () -> service.update(1, request));
+        verify(repository, never()).save(any());
+    }
 }
