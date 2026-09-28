@@ -143,4 +143,12 @@ class CategoryServiceImplTest {
 
         verify(repository).delete(category);
     }
+
+    @Test
+    void deleteThrowsWhenCategoryDoesNotExist() {
+        when(repository.findById(99)).thenReturn(Optional.empty());
+
+        assertThrows(CategoryNotFoundException.class, () -> service.delete(99));
+        verify(repository, never()).delete(any());
+    }
 }
