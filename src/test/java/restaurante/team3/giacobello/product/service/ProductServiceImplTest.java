@@ -144,4 +144,13 @@ class ProductServiceImplTest {
                 assertThrows(ProductAlreadyExistsException.class, () -> service.create(request));
                 verify(productRepository, never()).save(any());
         }
+
+        @Test
+        void createThrowsWhenCategoryDoesNotExist() {
+                when(productRepository.existsByName("Pizza")).thenReturn(false);
+                when(categoryRepository.findById(2)).thenReturn(Optional.empty());
+
+                assertThrows(CategoryNotFoundException.class, () -> service.create(request));
+                verify(productRepository, never()).save(any());
+        }
 }
