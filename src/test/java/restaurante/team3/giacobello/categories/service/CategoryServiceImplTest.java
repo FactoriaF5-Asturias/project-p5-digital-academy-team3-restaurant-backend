@@ -132,4 +132,15 @@ class CategoryServiceImplTest {
         assertThrows(CategoryAlreadyExistsException.class, () -> service.update(1, request));
         verify(repository, never()).save(any());
     }
+
+    @Test
+    void deleteRemovesCategoryWithoutProducts() {
+        CategoryEntity category = new CategoryEntity(1, "Pizzas");
+        when(repository.findById(1)).thenReturn(Optional.of(category));
+        when(productRepository.existsByCategoryId(1)).thenReturn(false);
+
+        service.delete(1);
+
+        verify(repository).delete(category);
+    }
 }
