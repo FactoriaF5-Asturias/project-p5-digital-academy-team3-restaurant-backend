@@ -120,4 +120,20 @@ class ProductServiceImplTest {
                 assertFalse(product.getStatus());
                 verify(productRepository).save(product);
         }
+
+        @Test
+        void createSavesProductWithItsCategory() {
+                CategoryEntity category = new CategoryEntity();
+                ProductEntity entity = new ProductEntity();
+                when(productRepository.existsByName("Pizza")).thenReturn(false);
+                when(categoryRepository.findById(2)).thenReturn(Optional.of(category));
+                when(productMapper.toEntity(request)).thenReturn(entity);
+                when(productRepository.save(entity)).thenReturn(entity);
+                when(productMapper.toDto(entity)).thenReturn(dto);
+
+                ProductDTOResponse result = service.create(request);
+
+                assertEquals(dto, result);
+                assertSame(category, entity.getCategory());
+        }
 }
