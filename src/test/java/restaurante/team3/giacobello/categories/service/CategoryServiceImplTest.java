@@ -113,4 +113,13 @@ class CategoryServiceImplTest {
         assertEquals(dto, result);
         assertEquals("Postres", category.getName());
     }
+
+    @Test
+    void updateThrowsWhenCategoryDoesNotExist() {
+        CategoryDTORequest request = new CategoryDTORequest("Postres");
+        when(repository.findById(99)).thenReturn(Optional.empty());
+
+        assertThrows(CategoryNotFoundException.class, () -> service.update(99, request));
+        verify(repository, never()).save(any());
+    }
 }
