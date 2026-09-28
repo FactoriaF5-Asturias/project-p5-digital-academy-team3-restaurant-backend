@@ -97,4 +97,20 @@ class CategoryServiceImplTest {
         assertThrows(CategoryAlreadyExistsException.class, () -> service.create(request));
         verify(repository, never()).save(any());
     }
+
+    @Test
+    void updateSavesNewName() {
+        CategoryDTORequest request = new CategoryDTORequest("Postres");
+        CategoryEntity category = new CategoryEntity(1, "Pizzas");
+        CategoryDTOResponse dto = new CategoryDTOResponse(1, "Postres");
+        when(repository.findById(1)).thenReturn(Optional.of(category));
+        when(repository.existsByNameAndIdNot("Postres", 1)).thenReturn(false);
+        when(repository.save(category)).thenReturn(category);
+        when(mapper.toResponse(category)).thenReturn(dto);
+
+        CategoryDTOResponse result = service.update(1, request);
+
+        assertEquals(dto, result);
+        assertEquals("Postres", category.getName());
+    }
 }
