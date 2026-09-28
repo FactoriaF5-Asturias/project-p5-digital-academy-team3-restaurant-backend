@@ -1,7 +1,10 @@
 package restaurante.team3.giacobello.product.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -9,14 +12,19 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
 
+import restaurante.team3.giacobello.categories.entity.CategoryEntity;
+import restaurante.team3.giacobello.categories.exceptions.CategoryNotFoundException;
 import restaurante.team3.giacobello.categories.repository.CategoryRepository;
+import restaurante.team3.giacobello.product.dtos.ProductDTORequest;
 import restaurante.team3.giacobello.product.dtos.ProductDTOResponse;
 import restaurante.team3.giacobello.product.entity.ProductEntity;
+import restaurante.team3.giacobello.product.exceptions.ProductAlreadyExistsException;
 import restaurante.team3.giacobello.product.exceptions.ProductNotFoundException;
 import restaurante.team3.giacobello.product.mappers.ProductMapper;
 import restaurante.team3.giacobello.product.repository.ProductRepository;
@@ -86,5 +94,18 @@ class ProductServiceImplTest {
                 when(productRepository.findById(99)).thenReturn(Optional.empty());
 
                 assertThrows(ProductNotFoundException.class, () -> service.delete(99));
+        }
+
+        private final ProductDTORequest request = new ProductDTORequest(
+                        "Pizza", "Rica", 2, new BigDecimal("10.00"), "/img.jpg", true);
+
+        private final ProductDTOResponse dto = new ProductDTOResponse(
+                        1, "Pizza", "Rica", "Especialidades", new BigDecimal("10.00"), true, "/img.jpg");
+
+        @Test
+        void findByIdThrowsWhenProductDoesNotExist() {
+                when(productRepository.findById(99)).thenReturn(Optional.empty());
+
+                assertThrows(NoSuchElementException.class, () -> service.findById(99));
         }
 }
