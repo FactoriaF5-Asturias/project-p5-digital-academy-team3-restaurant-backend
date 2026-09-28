@@ -88,4 +88,13 @@ class CategoryServiceImplTest {
 
         assertEquals(dto, result);
     }
+
+    @Test
+    void createThrowsWhenNameAlreadyExists() {
+        CategoryDTORequest request = new CategoryDTORequest("Pizzas");
+        when(repository.existsByName("Pizzas")).thenReturn(true);
+
+        assertThrows(CategoryAlreadyExistsException.class, () -> service.create(request));
+        verify(repository, never()).save(any());
+    }
 }
