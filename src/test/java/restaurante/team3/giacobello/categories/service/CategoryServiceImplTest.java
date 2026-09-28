@@ -17,13 +17,13 @@ import static org.mockito.Mockito.*;
 
 class CategoryServiceImplTest {
 
+    private final CategoryRepository repository = mock(CategoryRepository.class);
+    private final CategoryMapper mapper = mock(CategoryMapper.class);
+    private final ProductRepository productRepository = mock(ProductRepository.class);
+    private final CategoryServiceImpl service = new CategoryServiceImpl(repository, mapper, productRepository);
+
     @Test
     void findAllReturnsCategories() {
-        CategoryRepository repository = mock(CategoryRepository.class);
-        CategoryMapper mapper = mock(CategoryMapper.class);
-        ProductRepository productRepository = mock(ProductRepository.class);
-        CategoryServiceImpl service = new CategoryServiceImpl(repository, mapper, productRepository);
-
         CategoryEntity category = new CategoryEntity(1, "Pizzas");
         CategoryDTOResponse dto = new CategoryDTOResponse(1, "Pizzas");
 
