@@ -1,19 +1,24 @@
 package restaurante.team3.giacobello.categories.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Sort;
 
 import restaurante.team3.giacobello.categories.dto.CategoryDTOResponse;
 import restaurante.team3.giacobello.categories.entity.CategoryEntity;
+import restaurante.team3.giacobello.categories.exceptions.CategoryHasProductsException;
 import restaurante.team3.giacobello.categories.mappers.CategoryMapper;
 import restaurante.team3.giacobello.categories.repository.CategoryRepository;
-import restaurante.team3.giacobello.categories.service.CategoryServiceImpl;
 import restaurante.team3.giacobello.product.repository.ProductRepository;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
 
 class CategoryServiceImplTest {
 
@@ -33,5 +38,15 @@ class CategoryServiceImplTest {
         List<CategoryDTOResponse> result = service.findAll();
 
         assertEquals(List.of(dto), result);
+    }
+
+    @Test
+    void deleteThrowsWhenCategoryHasProducts() {
+        CategoryEntity category = new CategoryEntity(1, "Pizzas");
+        when(repository.findById(1)).thenReturn(Optional.of(category));
+        when(productRepository.existsByCategoryId(1)).thenReturn(true);
+
+        assertThrows(CategoryHasProductsException.class, () -> service.delete(1));
+        verify(repository, never()).delete(category);
     }
 }
