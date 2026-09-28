@@ -179,4 +179,13 @@ class ProductServiceImplTest {
                 assertThrows(ProductNotFoundException.class, () -> service.update(99, request));
                 verify(productRepository, never()).save(any());
         }
+
+        @Test
+        void updateThrowsWhenNameBelongsToAnotherProduct() {
+                when(productRepository.findById(1)).thenReturn(Optional.of(new ProductEntity()));
+                when(productRepository.existsByNameAndIdNot("Pizza", 1)).thenReturn(true);
+
+                assertThrows(ProductAlreadyExistsException.class, () -> service.update(1, request));
+                verify(productRepository, never()).save(any());
+        }
 }
