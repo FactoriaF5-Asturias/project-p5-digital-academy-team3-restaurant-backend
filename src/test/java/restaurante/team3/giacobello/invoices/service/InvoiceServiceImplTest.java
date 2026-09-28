@@ -2,6 +2,7 @@ package restaurante.team3.giacobello.invoices.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -20,6 +22,7 @@ import restaurante.team3.giacobello.invoices.service.InvoiceServiceImpl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -62,5 +65,22 @@ class InvoiceServiceImplTest {
                 () -> invoiceService.findByOrderId(5));
         assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
         verifyNoInteractions(invoiceMapper);
+    }
+
+    @Test
+    void shouldReturnAllInvoicesMappedToResponse() {
+        InvoiceEntity invoice = mock(InvoiceEntity.class);
+        InvoiceDTOResponse response = new InvoiceDTOResponse(
+                1,
+                5,
+                "INV-5",
+                new BigDecimal("25.00"),
+                LocalDateTime.of(2026, 9, 16, 12, 0));
+        when(invoiceRepository.findAll(any(Sort.class)))
+                .thenReturn(List.of(invoice));
+        when(invoiceMapper.toResponse(invoice))
+                .thenReturn(response);
+        List<InvoiceDTOResponse> result = invoiceService.findAll();
+        assertEquals(List.of(response), result);
     }
 }
