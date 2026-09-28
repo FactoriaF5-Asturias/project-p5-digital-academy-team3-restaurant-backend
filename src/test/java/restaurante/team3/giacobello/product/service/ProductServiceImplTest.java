@@ -136,4 +136,12 @@ class ProductServiceImplTest {
                 assertEquals(dto, result);
                 assertSame(category, entity.getCategory());
         }
+
+        @Test
+        void createThrowsWhenNameAlreadyExists() {
+                when(productRepository.existsByName("Pizza")).thenReturn(true);
+
+                assertThrows(ProductAlreadyExistsException.class, () -> service.create(request));
+                verify(productRepository, never()).save(any());
+        }
 }
