@@ -72,4 +72,20 @@ class CategoryServiceImplTest {
 
         assertThrows(CategoryNotFoundException.class, () -> service.findById(99));
     }
+
+    @Test
+    void createSavesCategory() {
+        CategoryDTORequest request = new CategoryDTORequest("Pizzas");
+        CategoryEntity entity = new CategoryEntity(null, "Pizzas");
+        CategoryEntity saved = new CategoryEntity(1, "Pizzas");
+        CategoryDTOResponse dto = new CategoryDTOResponse(1, "Pizzas");
+        when(repository.existsByName("Pizzas")).thenReturn(false);
+        when(mapper.toEntity(request)).thenReturn(entity);
+        when(repository.save(entity)).thenReturn(saved);
+        when(mapper.toResponse(saved)).thenReturn(dto);
+
+        CategoryDTOResponse result = service.create(request);
+
+        assertEquals(dto, result);
+    }
 }
