@@ -108,4 +108,16 @@ class ProductServiceImplTest {
 
                 assertThrows(NoSuchElementException.class, () -> service.findById(99));
         }
+
+        @Test
+        void deleteMarksProductAsInactive() {
+                ProductEntity product = new ProductEntity();
+                product.setStatus(true);
+                when(productRepository.findById(1)).thenReturn(Optional.of(product));
+
+                service.delete(1);
+
+                assertFalse(product.getStatus());
+                verify(productRepository).save(product);
+        }
 }
