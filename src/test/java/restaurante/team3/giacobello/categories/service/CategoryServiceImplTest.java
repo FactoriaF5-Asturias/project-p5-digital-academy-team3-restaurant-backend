@@ -65,4 +65,11 @@ class CategoryServiceImplTest {
 
         assertEquals(dto, result);
     }
+
+    @Test
+    void findByIdThrowsWhenCategoryDoesNotExist() {
+        when(repository.findById(99)).thenReturn(Optional.empty());
+
+        assertThrows(CategoryNotFoundException.class, () -> service.findById(99));
+    }
 }
