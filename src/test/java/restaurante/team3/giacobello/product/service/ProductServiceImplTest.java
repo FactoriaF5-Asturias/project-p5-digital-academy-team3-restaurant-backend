@@ -1,6 +1,7 @@
 package restaurante.team3.giacobello.product.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Sort;
 import restaurante.team3.giacobello.categories.repository.CategoryRepository;
 import restaurante.team3.giacobello.product.dtos.ProductDTOResponse;
 import restaurante.team3.giacobello.product.entity.ProductEntity;
+import restaurante.team3.giacobello.product.exceptions.ProductNotFoundException;
 import restaurante.team3.giacobello.product.mappers.ProductMapper;
 import restaurante.team3.giacobello.product.repository.ProductRepository;
 
@@ -77,5 +79,12 @@ class ProductServiceImplTest {
                 ProductDTOResponse result = service.findById(1);
 
                 assertEquals(dto, result);
+        }
+
+        @Test
+        void deleteThrowsWhenProductDoesNotExist() {
+                when(productRepository.findById(99)).thenReturn(Optional.empty());
+
+                assertThrows(ProductNotFoundException.class, () -> service.delete(99));
         }
 }
