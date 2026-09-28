@@ -153,4 +153,22 @@ class ProductServiceImplTest {
                 assertThrows(CategoryNotFoundException.class, () -> service.create(request));
                 verify(productRepository, never()).save(any());
         }
+
+        @Test
+        void updateSavesNewValues() {
+                CategoryEntity category = new CategoryEntity();
+                ProductEntity product = new ProductEntity();
+                when(productRepository.findById(1)).thenReturn(Optional.of(product));
+                when(productRepository.existsByNameAndIdNot("Pizza", 1)).thenReturn(false);
+                when(categoryRepository.findById(2)).thenReturn(Optional.of(category));
+                when(productRepository.save(product)).thenReturn(product);
+                when(productMapper.toDto(product)).thenReturn(dto);
+
+                ProductDTOResponse result = service.update(1, request);
+
+                assertEquals(dto, result);
+                assertEquals("Pizza", product.getName());
+                assertEquals(new BigDecimal("10.00"), product.getPrice());
+                assertSame(category, product.getCategory());
+        }
 }
