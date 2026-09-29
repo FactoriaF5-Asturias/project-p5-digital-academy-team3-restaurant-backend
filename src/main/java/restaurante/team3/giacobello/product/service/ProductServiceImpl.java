@@ -104,7 +104,7 @@ public class ProductServiceImpl implements ProductService {
     @Transactional(readOnly = true)
     public ProductDTOResponse findById(Integer id) {
         ProductEntity product = productRepository.findById(id)
-            .orElseThrow();
+                .orElseThrow(() -> new ProductNotFoundException("Product not found with id : " + id));
         return productMapper.toDto(product);
     }
 }

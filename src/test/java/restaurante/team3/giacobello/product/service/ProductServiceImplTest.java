@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -106,7 +105,7 @@ class ProductServiceImplTest {
         void findByIdThrowsWhenProductDoesNotExist() {
                 when(productRepository.findById(99)).thenReturn(Optional.empty());
 
-                assertThrows(NoSuchElementException.class, () -> service.findById(99));
+                assertThrows(ProductNotFoundException.class, () -> service.findById(99));
         }
 
         @Test
