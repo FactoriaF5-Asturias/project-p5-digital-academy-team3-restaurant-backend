@@ -76,4 +76,12 @@ class ProductControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.length()").value(11))
                 .andExpect(jsonPath("$[0].name").value("AI a la Carte"));
     }
+
+    @Test
+    void findByIdReturnsNotFoundWhenProductDoesNotExist() throws Exception {
+        mockMvc.perform(get("/api/v1/products/100"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Product not found with id : 100"));
+    }
 }
