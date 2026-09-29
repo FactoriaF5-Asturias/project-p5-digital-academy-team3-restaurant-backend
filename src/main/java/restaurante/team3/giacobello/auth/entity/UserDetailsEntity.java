@@ -7,6 +7,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -17,8 +19,13 @@ public class UserDetailsEntity {
     @Column(name = "user_id")
     private Integer userId;
 
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "user_id")
+    private UserAuthEntity user;
+
     @Column(nullable = false, unique = true, length = 60)
-    private String nickname;
+    private String email;
 
     @Column(name = "avatar_url", columnDefinition = "TEXT")
     private String avatarUrl;
@@ -41,12 +48,20 @@ public class UserDetailsEntity {
         this.userId = userId;
     }
 
-    public String getNickname() {
-        return nickname;
+    public UserAuthEntity getUser() {
+        return user;
     }
 
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
+    public void setUser(UserAuthEntity user) {
+        this.user = user;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public String getAvatarUrl() {
@@ -73,5 +88,4 @@ public class UserDetailsEntity {
         this.updatedAt = updatedAt;
     }
 
-    
 }
