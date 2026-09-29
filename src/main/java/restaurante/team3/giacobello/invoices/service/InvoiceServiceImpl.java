@@ -1,5 +1,8 @@
 package restaurante.team3.giacobello.invoices.service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import org.springframework.data.domain.Sort;
 
@@ -41,6 +44,18 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(readOnly = true)
     public List<InvoiceDTOResponse> findAll() {
         return invoiceRepository.findAll(Sort.by(InvoiceEntity::getId).descending())
+                .stream()
+                .map(invoiceMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<InvoiceDTOResponse> findByDateRange(LocalDate from, LocalDate to) {
+        LocalDateTime start = from.atStartOfDay();
+        LocalDateTime end = to.atTime(LocalTime.MAX);
+
+        return invoiceRepository.findByIssuedAtBetweenOrderByIssuedAtDesc(start, end)
                 .stream()
                 .map(invoiceMapper::toResponse)
                 .toList();
