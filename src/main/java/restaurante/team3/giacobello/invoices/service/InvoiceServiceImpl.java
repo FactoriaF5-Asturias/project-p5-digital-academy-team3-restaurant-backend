@@ -1,8 +1,11 @@
 package restaurante.team3.giacobello.invoices.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.IsoFields;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import org.springframework.data.domain.Sort;
 
@@ -12,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import restaurante.team3.giacobello.invoices.dto.InvoiceDTOResponse;
+import restaurante.team3.giacobello.invoices.dto.SalesTotalsDTOResponse;
 import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
 import restaurante.team3.giacobello.invoices.mappers.InvoiceMapper;
 import restaurante.team3.giacobello.invoices.repository.InvoiceRepository;
@@ -65,5 +69,30 @@ public class InvoiceServiceImpl implements InvoiceService {
                 .stream()
                 .map(invoiceMapper::toResponse)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public SalesTotalsDTOResponse findSalesTotals(LocalDate date) {
+        LocalDate quarterStart = date.with(IsoFields.DAY_OF_QUARTER, 1);
+        LocalDate quarterEnd = date.with(
+                IsoFields.DAY_OF_QUARTER,
+                date.range(IsoFields.DAY_OF_QUARTER).getMaximum());
+
+        return new SalesTotalsDTOResponse(
+                sumSalesBetween(date, date),
+                sumSalesBetween(
+                        date.with(TemporalAdjusters.firstDayOfMonth()),
+                        date.with(TemporalAdjusters.lastDayOfMonth())),
+                sumSalesBetween(quarterStart, quarterEnd),
+                sumSalesBetween(
+                        date.with(TemporalAdjusters.firstDayOfYear()),
+                        date.with(TemporalAdjusters.lastDayOfYear())));
+    }
+
+    private BigDecimal sumSalesBetween(LocalDate from, LocalDate to) {
+        return invoiceRepository.sumTotalAmountByIssuedAtBetween(
+                from.atStartOfDay(),
+                to.atTime(LocalTime.MAX));
     }
 }
