@@ -65,15 +65,37 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    @Transactional
+    void salesTotalsReturnsSumsOfDayMonthQuarterAndYearOfGivenDate() throws Exception {
+        saveInvoice("INV-DAY", LocalDateTime.of(2031, 8, 15, 10, 0), new BigDecimal("10.00"));
+        saveInvoice("INV-MONTH", LocalDateTime.of(2031, 8, 3, 13, 30), new BigDecimal("20.00"));
+        saveInvoice("INV-QUARTER", LocalDateTime.of(2031, 7, 20, 21, 0), new BigDecimal("40.00"));
+        saveInvoice("INV-YEAR", LocalDateTime.of(2031, 2, 10, 14, 0), new BigDecimal("80.00"));
+        saveInvoice("INV-LAST-YEAR", LocalDateTime.of(2030, 12, 31, 23, 59), new BigDecimal("160.00"));
+
+        mockMvc.perform(get("/api/v1/invoices/totals")
+                .param("date", "2031-08-15"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.daily").value(10.0))
+                .andExpect(jsonPath("$.monthly").value(30.0))
+                .andExpect(jsonPath("$.quarterly").value(70.0))
+                .andExpect(jsonPath("$.yearly").value(150.0));
+    }
+
     private void saveInvoice(String invoiceNumber, LocalDateTime issuedAt) {
+        saveInvoice(invoiceNumber, issuedAt, new BigDecimal("20.00"));
+    }
+
+    private void saveInvoice(String invoiceNumber, LocalDateTime issuedAt, BigDecimal totalAmount) {
         OrderEntity order = orderRepository.saveAndFlush(new OrderEntity(
                 null, 1, "DINE IN", "CASH", "PENDING",
-                new BigDecimal("20.00"),
+                totalAmount,
                 issuedAt));
         invoiceRepository.saveAndFlush(new InvoiceEntity(
                 order.getId(),
                 invoiceNumber,
-                new BigDecimal("20.00"),
+                totalAmount,
                 issuedAt));
     }
 }
