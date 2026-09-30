@@ -108,4 +108,15 @@ class InvoiceServiceImplTest {
         assertEquals(List.of(response), result);
         verify(invoiceRepository).findByIssuedAtBetweenOrderByIssuedAtDesc(start, end);
     }
+
+    @Test
+    void shouldReturnBadRequestWhenFromIsAfterTo() {
+        LocalDate from = LocalDate.of(2026, 9, 30);
+        LocalDate to = LocalDate.of(2026, 9, 1);
+        ResponseStatusException exception = assertThrows(
+                ResponseStatusException.class,
+                () -> invoiceService.findByDateRange(from, to));
+        assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+        verifyNoInteractions(invoiceRepository);
+    }
 }
