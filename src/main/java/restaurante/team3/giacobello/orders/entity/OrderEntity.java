@@ -41,6 +41,9 @@ public class OrderEntity {
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
     public OrderEntity() {
     }
 
@@ -99,6 +102,14 @@ public class OrderEntity {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getPaidAt() {
+        return paidAt;
+    }
+
+    public void setPaidAt(LocalDateTime paidAt) {
+        this.paidAt = paidAt;
     }
 
     public String getOrderTypeName() {
