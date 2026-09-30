@@ -238,7 +238,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public OrderDTOResponse pay(Integer id) {
-        OrderEntity order = orderRepository.findById(id)
+        OrderEntity order = orderRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
                         "No existe el pedido con ID " + id));

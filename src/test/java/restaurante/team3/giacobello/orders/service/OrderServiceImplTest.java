@@ -161,7 +161,7 @@ class OrderServiceImplTest {
 
         @Test
         void shouldReturnNotFoundWhenPayingAMissingOrder() {
-                when(orderRepository.findById(99)).thenReturn(Optional.empty());
+                when(orderRepository.findByIdForUpdate(99)).thenReturn(Optional.empty());
 
                 ResponseStatusException exception = assertThrows(
                                 ResponseStatusException.class,
@@ -175,7 +175,7 @@ class OrderServiceImplTest {
         void shouldReturnConflictWhenOrderIsAlreadyPaid() {
                 OrderEntity order = orderWith(7, "COMPLETED");
                 order.setPaidAt(LocalDateTime.of(2026, 9, 28, 13, 0));
-                when(orderRepository.findById(7)).thenReturn(Optional.of(order));
+                when(orderRepository.findByIdForUpdate(7)).thenReturn(Optional.of(order));
 
                 ResponseStatusException exception = assertThrows(
                                 ResponseStatusException.class,
@@ -188,7 +188,7 @@ class OrderServiceImplTest {
         @Test
         void shouldReturnConflictWhenOrderIsCancelled() {
                 OrderEntity order = orderWith(7, "CANCELLED");
-                when(orderRepository.findById(7)).thenReturn(Optional.of(order));
+                when(orderRepository.findByIdForUpdate(7)).thenReturn(Optional.of(order));
 
                 ResponseStatusException exception = assertThrows(
                                 ResponseStatusException.class,
@@ -205,7 +205,7 @@ class OrderServiceImplTest {
                 OrderDTOResponse response = new OrderDTOResponse(
                                 7, 2, "DINE IN", "CASH", "COMPLETED",
                                 new BigDecimal("25.00"), null, null, List.of());
-                when(orderRepository.findById(7)).thenReturn(Optional.of(order));
+                when(orderRepository.findByIdForUpdate(7)).thenReturn(Optional.of(order));
                 when(orderRepository.save(order)).thenReturn(order);
                 when(orderMapper.toResponse(order)).thenReturn(response);
 
