@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import restaurante.team3.giacobello.invoices.dto.InvoiceDTOResponse;
+import restaurante.team3.giacobello.invoices.dto.SalesTotalsDTOResponse;
 import restaurante.team3.giacobello.invoices.service.InvoiceService;
 
 @RestController
@@ -45,5 +46,12 @@ public class InvoiceController {
                     "Hay que indicar las dos fechas: from y to");
         }
         return ResponseEntity.ok(invoiceService.findByDateRange(from, to));
+    }
+
+    @GetMapping("/invoices/totals")
+    public ResponseEntity<SalesTotalsDTOResponse> findSalesTotals(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        LocalDate referenceDate = date != null ? date : LocalDate.now();
+        return ResponseEntity.ok(invoiceService.findSalesTotals(referenceDate));
     }
 }
