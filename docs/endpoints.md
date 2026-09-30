@@ -8,6 +8,7 @@ Method - Endpoint - Envia - Recibe
 
 | Hecho | Method | Endpoint                      | Da                                                                 | Recibe                                            | Errores       |
 | ----- | ------ | ----------------------------- | ------------------------------------------------------------------ | ------------------------------------------------- | ------------- |
+| [X]   | POST   | `/api/v1/auth/token`           | `username`, `password`                                             | Token JWT                                        | 400, 401      |
 | [X]   | GET    | `/api/products`               | ---                                                                | Lista de productos activos                        | 500           |
 | [X]   | GET    | `/api/products/{id}`          | `id` del producto                                                  | Producto                                          | 404, 400      |
 | [X]   | POST   | `/api/products`               | `name`, `description`, `categoryId`, `price`, `imageURL`, `status` | Producto creado                                   | 400, 404, 409 |
@@ -31,6 +32,37 @@ Method - Endpoint - Envia - Recibe
 | [ ]   | WS     | `/ws/orders/{id}`             | `id` del pedido                                                    | Actualizaciones del estado en tiempo real         |               |
 
 ## Probar peticiones de endpoints
+
+### Probar autenticación
+
+#### POST /api/v1/auth/token
+
+1. En Postman seleccionar método **POST** y esta URL:
+
+```text
+http://localhost:8080/api/v1/auth/token
+```
+
+2. En **Headers**, añadir `Content-Type: application/json`.
+3. En **Body**, seleccionar **raw** y **JSON**, y enviar las credenciales:
+
+```json
+{
+  "username": "Kitchen",
+  "password": "tu-contraseña"
+}
+```
+
+4. Con credenciales válidas, la respuesta es **200 OK**:
+
+```json
+{
+  "token": "eyJ..."
+}
+```
+
+Si el usuario o la contraseña no son válidos, responde **401 Unauthorized**. Los
+campos vacíos responden **400 Bad Request**. No requiere autenticación previa.
 
 ### Probar peticiones de pedidos
 
