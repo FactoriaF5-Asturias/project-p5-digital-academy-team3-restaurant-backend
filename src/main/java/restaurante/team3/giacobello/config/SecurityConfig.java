@@ -58,6 +58,7 @@ public class SecurityConfig {
                     "/swagger-ui.html",
                     "/v3/api-docs/**",
                     "/webjars/**",
+                    "/images/**",
                     endpoint + "/auth/token"
                 ).permitAll()
                 .requestMatchers(HttpMethod.GET, endpoint + "/invoices", endpoint + "/orders/*/invoice")
