@@ -14,4 +14,6 @@ public interface OrderService {
     OrderDTOResponse create(OrderCreateDTORequest request);
 
     OrderDTOResponse updateStatus(Integer id, OrderStatusUpdateDTORequest request);
+
+    OrderDTOResponse pay(Integer id);
 }

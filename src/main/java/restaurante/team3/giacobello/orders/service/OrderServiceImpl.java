@@ -234,4 +234,37 @@ public class OrderServiceImpl implements OrderService {
 
         return orderMapper.toResponse(savedOrder);
     }
+
+    @Override
+    @Transactional
+    public OrderDTOResponse pay(Integer id) {
+        OrderEntity order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "No existe el pedido con ID " + id));
+
+        if (order.getPaidAt() != null) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El pedido " + id + " ya está pagado");
+        }
+
+        if ("CANCELLED".equals(order.getStatusName())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "No se puede cobrar el pedido cancelado " + id);
+        }
+
+        LocalDateTime paidAt = LocalDateTime.now();
+        order.setPaidAt(paidAt);
+        OrderEntity savedOrder = orderRepository.save(order);
+
+        invoiceRepository.save(new InvoiceEntity(
+                savedOrder.getId(),
+                "INV-" + savedOrder.getId(),
+                savedOrder.getTotalAmount(),
+                paidAt));
+
+        return orderMapper.toResponse(savedOrder);
+    }
 }
