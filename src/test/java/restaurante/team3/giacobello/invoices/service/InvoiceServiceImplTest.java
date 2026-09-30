@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import restaurante.team3.giacobello.invoices.dto.InvoiceDTOResponse;
+import restaurante.team3.giacobello.invoices.dto.SalesTotalsDTOResponse;
 import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
 import restaurante.team3.giacobello.invoices.mappers.InvoiceMapper;
 import restaurante.team3.giacobello.invoices.repository.InvoiceRepository;
@@ -118,5 +119,32 @@ class InvoiceServiceImplTest {
                 () -> invoiceService.findByDateRange(from, to));
         assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
         verifyNoInteractions(invoiceRepository);
+    }
+
+    @Test
+    void shouldSumSalesOfDayMonthQuarterAndYearOfGivenDate() {
+        LocalDate date = LocalDate.of(2026, 8, 15);
+        when(invoiceRepository.sumTotalAmountByIssuedAtBetween(
+                LocalDateTime.of(2026, 8, 15, 0, 0),
+                LocalDateTime.of(LocalDate.of(2026, 8, 15), LocalTime.MAX)))
+                .thenReturn(new BigDecimal("20.00"));
+        when(invoiceRepository.sumTotalAmountByIssuedAtBetween(
+                LocalDateTime.of(2026, 8, 1, 0, 0),
+                LocalDateTime.of(LocalDate.of(2026, 8, 31), LocalTime.MAX)))
+                .thenReturn(new BigDecimal("140.00"));
+        when(invoiceRepository.sumTotalAmountByIssuedAtBetween(
+                LocalDateTime.of(2026, 7, 1, 0, 0),
+                LocalDateTime.of(LocalDate.of(2026, 9, 30), LocalTime.MAX)))
+                .thenReturn(new BigDecimal("380.00"));
+        when(invoiceRepository.sumTotalAmountByIssuedAtBetween(
+                LocalDateTime.of(2026, 1, 1, 0, 0),
+                LocalDateTime.of(LocalDate.of(2026, 12, 31), LocalTime.MAX)))
+                .thenReturn(new BigDecimal("1200.00"));
+        SalesTotalsDTOResponse result = invoiceService.findSalesTotals(date);
+        assertEquals(new SalesTotalsDTOResponse(
+                new BigDecimal("20.00"),
+                new BigDecimal("140.00"),
+                new BigDecimal("380.00"),
+                new BigDecimal("1200.00")), result);
     }
 }
