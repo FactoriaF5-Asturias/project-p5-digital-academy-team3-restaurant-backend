@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import restaurante.team3.giacobello.infrastructure.IntegrationTest;
@@ -36,8 +37,7 @@ class AuthControllerIntegrationTest extends IntegrationTest {
     @Autowired
     private JwtDecoder jwtDecoder;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        private final ObjectMapper objectMapper = new ObjectMapper();
 
     private String username;
 
@@ -83,7 +83,7 @@ class AuthControllerIntegrationTest extends IntegrationTest {
 
     @Test
     void protectedRouteRequiresValidJwt() throws Exception {
-        mockMvc.perform(get("/api/v1/categories"))
+                mockMvc.perform(get("/api/v1/orders"))
                 .andExpect(status().isUnauthorized());
 
         MvcResult result = login(PASSWORD)
@@ -91,15 +91,176 @@ class AuthControllerIntegrationTest extends IntegrationTest {
                 .andReturn();
         String token = extractToken(result);
 
-        mockMvc.perform(get("/api/v1/categories")
+        mockMvc.perform(get("/api/v1/orders")
                         .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }
 
+    @Test
+    @Transactional
+    void anonymousUserCanBrowseAndPlaceOrderButNotAccessRestrictedResources() throws Exception {
+        mockMvc.perform(get("/api/v1/categories"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/products"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/tablets"))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/paymentmethod"))
+                .andExpect(status().isOk());
+
+        String orderRequest = """
+                {
+                  "tabletId": 3,
+                  "orderTypeName": "DINE IN",
+                  "paymentMethodName": "CASH",
+                  "items": [
+                    { "productId": 1, "quantity": 2 },
+                    { "productId": 8, "quantity": 1 }
+                  ]
+                }
+                """;
+        mockMvc.perform(post("/api/v1/orders")
+                        .contentType("application/json")
+                        .content(orderRequest))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/orders"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/invoices"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/orders/1/invoice"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/products")
+                        .contentType("application/json")
+                        .content("{}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void kitchenRoleCanReadOrders() throws Exception {
+        String token = extractToken(login(PASSWORD).andReturn());
+
+        mockMvc.perform(get("/api/v1/orders")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void kitchenRoleCannotManageCategories() throws Exception {
+        String token = extractToken(login(PASSWORD).andReturn());
+
+        mockMvc.perform(post("/api/v1/categories")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content("{\"name\":\"restricted-category\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void adminRoleCanManageCategories() throws Exception {
+        String adminUsername = createUserWithRole("ADMIN");
+        String token = extractToken(login(adminUsername, PASSWORD).andReturn());
+
+        mockMvc.perform(post("/api/v1/categories")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content("{\"name\":\"admin-" + UUID.randomUUID() + "\"}"))
+                .andExpect(status().isCreated());
+    }
+
+        @Test
+        void kitchenRoleCannotModifyProducts() throws Exception {
+                String token = extractToken(login(PASSWORD).andReturn());
+
+                mockMvc.perform(post("/api/v1/products")
+                                                .header("Authorization", "Bearer " + token)
+                                                .contentType("application/json")
+                                                .content("{}"))
+                                .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void adminRoleCanReachProductManagement() throws Exception {
+                String adminUsername = createUserWithRole("ADMIN");
+                String token = extractToken(login(adminUsername, PASSWORD).andReturn());
+
+                mockMvc.perform(post("/api/v1/products")
+                                                .header("Authorization", "Bearer " + token)
+                                                .contentType("application/json")
+                                                .content("{}"))
+                                .andExpect(status().isBadRequest());
+        }
+
+    @Test
+        @Transactional
+    void userWithoutRoleCanPlaceOrderButCannotAccessRestrictedApis() throws Exception {
+        String userWithoutRole = "auth-test-" + UUID.randomUUID();
+        jdbcTemplate.update(
+                "INSERT INTO users_auth (username, password_hash) VALUES (?, ?)",
+                userWithoutRole,
+                passwordEncoder.encode(PASSWORD));
+
+        MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/token")
+                        .contentType("application/json")
+                        .content(loginJson(userWithoutRole, PASSWORD)))
+                .andExpect(status().isOk())
+                .andReturn();
+        String token = extractToken(loginResult);
+        org.junit.jupiter.api.Assertions.assertEquals(
+                List.of(), jwtDecoder.decode(token).getClaimAsStringList("roles"));
+
+        String orderRequest = """
+                {
+                  "tabletId": 3,
+                  "orderTypeName": "DINE IN",
+                  "paymentMethodName": "CASH",
+                  "items": [
+                    { "productId": 1, "quantity": 2 },
+                    { "productId": 8, "quantity": 1 }
+                  ]
+                }
+                """;
+        mockMvc.perform(post("/api/v1/orders")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content(orderRequest))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/orders")
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/v1/products")
+                        .header("Authorization", "Bearer " + token)
+                        .contentType("application/json")
+                        .content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
     private org.springframework.test.web.servlet.ResultActions login(String password) throws Exception {
+        return login(username, password);
+    }
+
+    private org.springframework.test.web.servlet.ResultActions login(String user, String password) throws Exception {
         return mockMvc.perform(post("/api/v1/auth/token")
                 .contentType("application/json")
-                .content(loginJson(username, password)));
+                .content(loginJson(user, password)));
+    }
+
+    private String createUserWithRole(String role) {
+        String newUsername = "auth-test-" + UUID.randomUUID();
+        Integer userId = jdbcTemplate.queryForObject(
+                "INSERT INTO users_auth (username, password_hash) VALUES (?, ?) RETURNING id",
+                Integer.class,
+                newUsername,
+                passwordEncoder.encode(PASSWORD));
+        jdbcTemplate.update(
+                "INSERT INTO users_details (user_id, email, role_id) "
+                        + "SELECT ?, ?, id FROM users_role WHERE name = ?",
+                userId,
+                newUsername + "@example.test",
+                role);
+        return newUsername;
     }
 
     private String loginJson(String user, String password) throws Exception {
