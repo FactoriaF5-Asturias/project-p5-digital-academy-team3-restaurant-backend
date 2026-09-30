@@ -17,7 +17,8 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
 
     @Test
     void findAllReturnsOkAndListOfInvoices() throws Exception {
-        mockMvc.perform(get("/api/v1/invoices"))
+        mockMvc.perform(get("/api/v1/invoices")
+            .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
