@@ -60,4 +60,10 @@ public class OrderController {
             @Valid @RequestBody OrderStatusUpdateDTORequest request) {
         return ResponseEntity.ok(orderService.updateStatus(id, request));
     }
+
+    @PutMapping("/{id}/pay")
+    public ResponseEntity<OrderDTOResponse> pay(
+            @PathVariable("id") Integer id) {
+        return ResponseEntity.ok(orderService.pay(id));
+    }
 }
