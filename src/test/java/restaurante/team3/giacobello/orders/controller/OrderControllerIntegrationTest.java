@@ -64,6 +64,19 @@ class OrderControllerIntegrationTest extends IntegrationTest {
 
     @Test
     @Transactional
+    void findByIdReturnsPaidAtWhenOrderIsPaid() throws Exception {
+        deleteOrders();
+        OrderEntity order = saveOrder("COMPLETED");
+        order.setPaidAt(LocalDateTime.of(2026, 9, 28, 13, 15));
+        orderRepository.saveAndFlush(order);
+
+        mockMvc.perform(get("/api/v1/orders/{id}", order.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paidAt").value("2026-09-28T13:15:00"));
+    }
+
+    @Test
+    @Transactional
     void createReturnsCreatedOrder() throws Exception {
         deleteOrders();
         String requestBody = """
