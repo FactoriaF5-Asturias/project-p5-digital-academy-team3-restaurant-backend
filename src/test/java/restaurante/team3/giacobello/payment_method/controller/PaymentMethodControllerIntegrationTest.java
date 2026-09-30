@@ -17,7 +17,8 @@ class PaymentMethodControllerIntegrationTest extends IntegrationTest {
 
     @Test
     void findAllReturnsPaymentMethodsSortedByName() throws Exception {
-        mockMvc.perform(get("/api/v1/paymentmethod"))
+        mockMvc.perform(get("/api/v1/paymentmethod")
+            .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].name").value("CARD"))
