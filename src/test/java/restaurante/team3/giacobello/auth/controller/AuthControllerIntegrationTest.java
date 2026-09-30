@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -192,49 +193,32 @@ class AuthControllerIntegrationTest extends IntegrationTest {
         }
 
     @Test
-        @Transactional
-    void userWithoutRoleCanPlaceOrderButCannotAccessRestrictedApis() throws Exception {
+    void accountWithoutRoleCannotBeCreated() {
         String userWithoutRole = "auth-test-" + UUID.randomUUID();
+        org.junit.jupiter.api.Assertions.assertThrows(
+                DataIntegrityViolationException.class,
+                () -> jdbcTemplate.update(
+                        "WITH new_user AS ("
+                                + "INSERT INTO users_auth (username, password_hash) VALUES (?, ?) RETURNING id"
+                                + ") INSERT INTO users_details (user_id, email, role_id) "
+                                + "SELECT new_user.id, ?, NULL FROM new_user",
+                        userWithoutRole,
+                        passwordEncoder.encode(PASSWORD),
+                        userWithoutRole + "@example.test"));
+    }
+
+    @Test
+    void accountWithoutDetailsCannotLogIn() throws Exception {
+        String userWithoutDetails = "auth-test-" + UUID.randomUUID();
         jdbcTemplate.update(
                 "INSERT INTO users_auth (username, password_hash) VALUES (?, ?)",
-                userWithoutRole,
+                userWithoutDetails,
                 passwordEncoder.encode(PASSWORD));
 
-        MvcResult loginResult = mockMvc.perform(post("/api/v1/auth/token")
+        mockMvc.perform(post("/api/v1/auth/token")
                         .contentType("application/json")
-                        .content(loginJson(userWithoutRole, PASSWORD)))
-                .andExpect(status().isOk())
-                .andReturn();
-        String token = extractToken(loginResult);
-        org.junit.jupiter.api.Assertions.assertEquals(
-                List.of(), jwtDecoder.decode(token).getClaimAsStringList("roles"));
-
-        String orderRequest = """
-                {
-                  "tabletId": 3,
-                  "orderTypeName": "DINE IN",
-                  "paymentMethodName": "CASH",
-                  "items": [
-                    { "productId": 1, "quantity": 2 },
-                    { "productId": 8, "quantity": 1 }
-                  ]
-                }
-                """;
-        mockMvc.perform(post("/api/v1/orders")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType("application/json")
-                        .content(orderRequest))
-                .andExpect(status().isCreated());
-
-        mockMvc.perform(get("/api/v1/orders")
-                        .header("Authorization", "Bearer " + token))
-                .andExpect(status().isForbidden());
-
-        mockMvc.perform(post("/api/v1/products")
-                        .header("Authorization", "Bearer " + token)
-                        .contentType("application/json")
-                        .content("{}"))
-                .andExpect(status().isForbidden());
+                        .content(loginJson(userWithoutDetails, PASSWORD)))
+                .andExpect(status().isUnauthorized());
     }
 
     private org.springframework.test.web.servlet.ResultActions login(String password) throws Exception {

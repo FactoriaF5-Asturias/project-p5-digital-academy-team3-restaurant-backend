@@ -16,10 +16,17 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
     private MockMvc mockMvc;
 
     @Test
-    void findAllReturnsOkAndListOfInvoices() throws Exception {
+    void adminCanFindAllInvoices() throws Exception {
         mockMvc.perform(get("/api/v1/invoices")
-            .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
+            .header("Authorization", "Bearer " + tokenForRole("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
+    }
+
+    @Test
+    void clientCannotFindAllInvoices() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices")
+                .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
+                .andExpect(status().isForbidden());
     }
 }

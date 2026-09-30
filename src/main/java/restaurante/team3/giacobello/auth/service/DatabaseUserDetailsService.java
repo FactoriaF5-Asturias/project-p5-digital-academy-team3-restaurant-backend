@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import restaurante.team3.giacobello.auth.entity.UserAuthEntity;
@@ -34,7 +35,7 @@ public class DatabaseUserDetailsService implements UserDetailsService {
         List<SimpleGrantedAuthority> authorities = userDetailsRepository.findByUserId(user.getId())
                 .map(details -> details.getRole())
                 .map(role -> List.of(new SimpleGrantedAuthority("ROLE_" + role.getName())))
-                .orElseGet(List::of);
+                .orElseThrow(() -> new BadCredentialsException("User has no assigned role"));
 
         return User.withUsername(user.getUsername())
                 .password(user.getPasswordHash())
