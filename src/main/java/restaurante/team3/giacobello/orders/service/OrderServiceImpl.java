@@ -158,11 +158,6 @@ public class OrderServiceImpl implements OrderService {
         OrderEntity savedOrder = orderRepository.save(order);
         orderItemRepository.saveAll(lines);
         savedOrder.getItems().addAll(lines);
-        invoiceRepository.save(new InvoiceEntity(
-                savedOrder.getId(),
-                "INV-" + savedOrder.getId(),
-                savedOrder.getTotalAmount(),
-                LocalDateTime.now()));
         return orderMapper.toResponse(savedOrder);
     }
 
