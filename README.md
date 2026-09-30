@@ -36,8 +36,7 @@ Antes de picar código, necesito tener preparado:
 - **PostgreSQL Driver**: conector JDBC necesario para conectar con la base de datos.
 - **Spring Validation**: valida los DTOs de entrada (perfil, pedidos) antes de llegar al service.
 - **Spring Security**: filtra y protege los endpoints según el rol del usuario.
-- **JJWT**: firma y genera los tokens de sesión en el login.
-- **OAuth2 Resource Server**: valida esos tokens JWT en cada petición autenticada.
+- **OAuth2 Resource Server**: valida JWT Bearer; la emisión y validación usan `JwtEncoder`/`JwtDecoder` de Spring Security con Nimbus.
 - **Flyway**: versiona y migra el esquema de la base de datos de forma controlada.
 
 ### Integraciones externas / funcionalidades específicas
@@ -55,3 +54,11 @@ http://localhost:8080/swagger-ui/index.html
 http://localhost:8080/v3/api-docs
 
 **NOTA**: Para visualizar estos datos el servicio backend debe estar activo.
+
+## Autenticación local
+
+El login acepta `POST /api/v1/auth/token` con un JSON `{"username":"...","password":"..."}` y devuelve `{"token":"..."}`. Configura `JWT_KEY` en el entorno antes de iniciar el backend; debe contener al menos 64 bytes UTF-8 para HS512. No guardes este valor en el repositorio. En PowerShell puedes generar uno para la sesión actual con:
+
+```powershell
+$env:JWT_KEY = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(64))
+```
