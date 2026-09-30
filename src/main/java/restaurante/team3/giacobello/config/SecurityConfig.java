@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -59,6 +60,26 @@ public class SecurityConfig {
                     "/webjars/**",
                     endpoint + "/auth/token"
                 ).permitAll()
+                .requestMatchers(HttpMethod.GET, endpoint + "/invoices", endpoint + "/orders/*/invoice")
+                    .authenticated()
+                .requestMatchers(HttpMethod.GET, endpoint + "/orders", endpoint + "/orders/*")
+                    .hasAnyRole("KITCHEN", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, endpoint + "/orders/*/status")
+                    .hasAnyRole("KITCHEN", "ADMIN")
+                .requestMatchers(HttpMethod.POST, endpoint + "/orders")
+                    .permitAll()
+                .requestMatchers(HttpMethod.POST, endpoint + "/categories", endpoint + "/products")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, endpoint + "/categories/**", endpoint + "/products/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, endpoint + "/categories/**", endpoint + "/products/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET,
+                        endpoint + "/categories", endpoint + "/categories/**",
+                        endpoint + "/products", endpoint + "/products/**",
+                        endpoint + "/tablets", endpoint + "/tablets/**",
+                        endpoint + "/paymentmethod")
+                    .permitAll()
                 .anyRequest().authenticated())
             .authenticationProvider(authenticationProvider)
             .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
@@ -117,7 +138,7 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true);
         configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin"));
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
