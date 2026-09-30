@@ -1,5 +1,6 @@
 package restaurante.team3.giacobello.orders.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -17,12 +18,14 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
 import restaurante.team3.giacobello.infrastructure.IntegrationTest;
 import restaurante.team3.giacobello.orders.entity.OrderEntity;
 import restaurante.team3.giacobello.orders.repository.OrderItemRepository;
 import restaurante.team3.giacobello.orders.repository.OrderRepository;
+import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
 import restaurante.team3.giacobello.invoices.repository.InvoiceRepository;
 
 @ActiveProfiles({ "test", "dev" })
@@ -121,6 +124,49 @@ class OrderControllerIntegrationTest extends IntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(order.getId()))
                 .andExpect(jsonPath("$.statusName").value("COMPLETED"));
+    }
+
+    @Test
+    @Transactional
+    void payMarksOrderAsPaidAndIssuesItsInvoice() throws Exception {
+        deleteOrders();
+        OrderEntity order = saveOrder("COMPLETED");
+
+        mockMvc.perform(payRequest(order.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(order.getId()))
+                .andExpect(jsonPath("$.statusName").value("COMPLETED"))
+                .andExpect(jsonPath("$.paidAt").isNotEmpty());
+
+        InvoiceEntity invoice = invoiceRepository.findByOrderId(order.getId()).orElseThrow();
+        assertEquals("INV-" + order.getId(), invoice.getInvoiceNumber());
+        assertEquals(new BigDecimal("120.00"), invoice.getTotalAmount());
+    }
+
+    @Test
+    @Transactional
+    void payReturnsConflictWhenOrderIsAlreadyPaid() throws Exception {
+        deleteOrders();
+        OrderEntity order = saveOrder("COMPLETED");
+
+        mockMvc.perform(payRequest(order.getId()))
+                .andExpect(status().isOk());
+        mockMvc.perform(payRequest(order.getId()))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @Transactional
+    void payReturnsNotFoundWhenOrderDoesNotExist() throws Exception {
+        deleteOrders();
+
+        mockMvc.perform(payRequest(999999))
+                .andExpect(status().isNotFound());
+    }
+
+    private MockHttpServletRequestBuilder payRequest(Integer id) {
+        return put("/api/v1/orders/{id}/pay", id)
+                .servletPath("/api/v1/orders/" + id + "/pay");
     }
 
     private OrderEntity saveOrder(String statusName) {
