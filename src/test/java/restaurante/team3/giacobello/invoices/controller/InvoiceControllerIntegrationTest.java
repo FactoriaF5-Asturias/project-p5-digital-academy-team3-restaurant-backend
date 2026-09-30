@@ -83,6 +83,17 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.yearly").value(150.0));
     }
 
+    @Test
+    void salesTotalsReturnsZeroWhenThereAreNoSales() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices/totals")
+                .param("date", "2035-06-15"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.daily").value(0))
+                .andExpect(jsonPath("$.monthly").value(0))
+                .andExpect(jsonPath("$.quarterly").value(0))
+                .andExpect(jsonPath("$.yearly").value(0));
+    }
+
     private void saveInvoice(String invoiceNumber, LocalDateTime issuedAt) {
         saveInvoice(invoiceNumber, issuedAt, new BigDecimal("20.00"));
     }
