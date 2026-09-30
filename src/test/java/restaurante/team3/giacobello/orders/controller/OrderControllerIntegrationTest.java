@@ -16,6 +16,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
+
+import com.jayway.jsonpath.JsonPath;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -162,6 +164,38 @@ class OrderControllerIntegrationTest extends IntegrationTest {
 
         mockMvc.perform(payRequest(999999))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Transactional
+    void invoicesListOnlyPaidOrders() throws Exception {
+        deleteOrders();
+        String createdOrder = mockMvc.perform(post("/api/v1/orders")
+                .servletPath("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "tabletId": 3,
+                          "orderTypeName": "DINE IN",
+                          "paymentMethodName": "CASH",
+                          "items": [ { "productId": 1, "quantity": 1 } ]
+                        }
+                        """))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Integer orderId = JsonPath.read(createdOrder, "$.id");
+
+        mockMvc.perform(get("/api/v1/invoices"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(payRequest(orderId))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/invoices"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].orderId").value(orderId));
     }
 
     private MockHttpServletRequestBuilder payRequest(Integer id) {
