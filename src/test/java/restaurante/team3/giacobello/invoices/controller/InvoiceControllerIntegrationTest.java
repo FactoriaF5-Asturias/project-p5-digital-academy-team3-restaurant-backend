@@ -50,6 +50,14 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$[0].invoiceNumber").value("INV-SEP"));
     }
 
+    @Test
+    void findAllWithStartDateAfterEndDateReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices")
+                .param("from", "2026-09-30")
+                .param("to", "2026-09-01"))
+                .andExpect(status().isBadRequest());
+    }
+
     private void saveInvoice(String invoiceNumber, LocalDateTime issuedAt) {
         OrderEntity order = orderRepository.saveAndFlush(new OrderEntity(
                 null, 1, "DINE IN", "CASH", "PENDING",
