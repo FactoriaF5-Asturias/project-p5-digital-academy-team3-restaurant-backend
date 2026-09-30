@@ -58,6 +58,13 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void findAllWithOnlyOneDateReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices")
+                .param("from", "2026-09-01"))
+                .andExpect(status().isBadRequest());
+    }
+
     private void saveInvoice(String invoiceNumber, LocalDateTime issuedAt) {
         OrderEntity order = orderRepository.saveAndFlush(new OrderEntity(
                 null, 1, "DINE IN", "CASH", "PENDING",
