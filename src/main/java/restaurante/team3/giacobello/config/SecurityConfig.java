@@ -47,7 +47,7 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/tablets/*").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories/*").permitAll()
-                    .requestMatchers(HttpMethod.GET, apiEndpoint + "/invoices").permitAll()
+                    .requestMatchers(HttpMethod.GET, apiEndpoint + "/invoices", apiEndpoint + "/invoices/totals").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/paymentmethod").permitAll();
             if (devProfile) {
                 auth.requestMatchers(
