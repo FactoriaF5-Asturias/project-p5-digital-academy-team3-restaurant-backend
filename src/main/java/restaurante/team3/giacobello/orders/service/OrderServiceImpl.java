@@ -233,6 +233,12 @@ public class OrderServiceImpl implements OrderService {
                     "Estado no válido: " + request.statusName());
         }
 
+        if ("CANCELLED".equals(statusName) && !"PENDING".equals(order.getStatusName())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Solo se pueden rechazar pedidos pendientes");
+        }
+
         order.setStatusName(statusName);
 
         OrderEntity savedOrder = orderRepository.save(order);
