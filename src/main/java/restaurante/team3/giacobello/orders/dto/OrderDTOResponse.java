@@ -15,5 +15,7 @@ public record OrderDTOResponse(
         BigDecimal totalAmount,
         @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
         LocalDateTime createdAt,
+        @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
+        LocalDateTime paidAt,
         List<OrderItemDTOResponse> items) {
 }

@@ -74,6 +74,7 @@ class OrderServiceImplTest {
                                 "PENDING",
                                 new java.math.BigDecimal("25.00"),
                                 null,
+                                null,
                                 List.of());
 
                 when(tabletRepository.existsById(2)).thenReturn(true);
@@ -110,6 +111,7 @@ class OrderServiceImplTest {
                                 "IN PROGRESS",
                                 null,
                                 null,
+                                null,
                                 List.of());
 
                 when(orderRepository.findAll()).thenReturn(List.of(order));
@@ -131,6 +133,7 @@ class OrderServiceImplTest {
                                 "DINE IN",
                                 "CASH",
                                 "PENDING",
+                                null,
                                 null,
                                 null,
                                 List.of());
