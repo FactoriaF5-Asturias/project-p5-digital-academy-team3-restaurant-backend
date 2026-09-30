@@ -8,7 +8,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.server.ResponseStatusException;
 
-import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
 import restaurante.team3.giacobello.invoices.repository.InvoiceRepository;
 import restaurante.team3.giacobello.orders.dto.OrderCreateDTORequest;
 import restaurante.team3.giacobello.orders.dto.OrderDTOResponse;
@@ -27,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -59,7 +59,7 @@ class OrderServiceImplTest {
         private OrderServiceImpl orderService;
 
         @Test
-        void shouldCreateInvoiceWhenOrderIsCreated() {
+        void shouldNotCreateInvoiceWhenOrderIsCreated() {
                 ProductEntity product = org.mockito.Mockito.mock(ProductEntity.class);
                 OrderCreateDTORequest request = new OrderCreateDTORequest(
                                 2,
@@ -91,13 +91,10 @@ class OrderServiceImplTest {
 
                 orderService.create(request);
 
-                ArgumentCaptor<InvoiceEntity> invoiceCaptor = ArgumentCaptor.forClass(InvoiceEntity.class);
-                verify(invoiceRepository).save(invoiceCaptor.capture());
-                InvoiceEntity invoice = invoiceCaptor.getValue();
-                assertEquals(7, invoice.getOrderId());
-                assertEquals("INV-7", invoice.getInvoiceNumber());
-                assertEquals(new java.math.BigDecimal("25.00"), invoice.getTotalAmount());
-                org.junit.jupiter.api.Assertions.assertNotNull(invoice.getIssuedAt());
+                ArgumentCaptor<OrderEntity> orderCaptor = ArgumentCaptor.forClass(OrderEntity.class);
+                verify(orderRepository).save(orderCaptor.capture());
+                assertNull(orderCaptor.getValue().getPaidAt());
+                verifyNoInteractions(invoiceRepository);
         }
 
         @Test
