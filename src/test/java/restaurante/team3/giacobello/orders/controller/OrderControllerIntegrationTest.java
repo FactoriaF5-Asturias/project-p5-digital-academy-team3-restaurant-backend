@@ -45,7 +45,8 @@ class OrderControllerIntegrationTest extends IntegrationTest {
     void findAllReturnsOkAndListOfOrders() throws Exception {
         deleteOrders();
         saveOrder("PENDING");
-        mockMvc.perform(get("/api/v1/orders"))
+        mockMvc.perform(get("/api/v1/orders")
+          .header("Authorization", "Bearer " + tokenForRole("KITCHEN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isNotEmpty());
@@ -56,7 +57,8 @@ class OrderControllerIntegrationTest extends IntegrationTest {
     void findByIdReturnsOrder() throws Exception {
         deleteOrders();
         OrderEntity order = saveOrder("ACCEPTED");
-        mockMvc.perform(get("/api/v1/orders/{id}", order.getId()))
+        mockMvc.perform(get("/api/v1/orders/{id}", order.getId())
+          .header("Authorization", "Bearer " + tokenForRole("KITCHEN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(order.getId()))
                 .andExpect(jsonPath("$.statusName").value("ACCEPTED"));
@@ -102,6 +104,7 @@ class OrderControllerIntegrationTest extends IntegrationTest {
                 """;
 
         mockMvc.perform(put("/api/v1/orders/{id}/status", order.getId())
+          .header("Authorization", "Bearer " + tokenForRole("KITCHEN"))
                 .servletPath("/api/v1/orders/" + order.getId() + "/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
@@ -109,6 +112,27 @@ class OrderControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.id").value(order.getId()))
                 .andExpect(jsonPath("$.statusName").value("COMPLETED"));
     }
+
+                @Test
+                @Transactional
+                void kitchenCanRejectPendingOrderOnlyOnce() throws Exception {
+              deleteOrders();
+              OrderEntity order = saveOrder("PENDING");
+              String requestBody = "{\"statusName\":\"CANCELLED\"}";
+
+              mockMvc.perform(put("/api/v1/orders/{id}/status", order.getId())
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusName").value("CANCELLED"));
+
+              mockMvc.perform(put("/api/v1/orders/{id}/status", order.getId())
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isConflict());
+                }
 
     private OrderEntity saveOrder(String statusName) {
         OrderEntity order = new OrderEntity(
