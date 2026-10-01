@@ -139,6 +139,17 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void salesReportPdfExposesContentDispositionToTheFrontend() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices/report/pdf")
+                .param("period", "DAY")
+                .header(HttpHeaders.ORIGIN, "http://localhost:5173"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(
+                        HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
+                        HttpHeaders.CONTENT_DISPOSITION));
+    }
+
+    @Test
     void salesReportPdfWithUnknownPeriodReturnsBadRequest() throws Exception {
         mockMvc.perform(get("/api/v1/invoices/report/pdf")
                 .param("period", "WEEK"))
