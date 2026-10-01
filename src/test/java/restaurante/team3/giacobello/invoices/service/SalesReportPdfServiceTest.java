@@ -119,6 +119,22 @@ class SalesReportPdfServiceTest {
     }
 
     @Test
+    void shouldKeepAllTotalsTogetherOnTheLastPage() throws IOException {
+        for (int count = 20; count <= 60; count++) {
+            List<InvoiceDTOResponse> invoices = IntStream.rangeClosed(1, count)
+                    .mapToObj(id -> invoice(id, "INV-" + id, "5.00", LocalDateTime.of(2026, 9, 10, 12, 0)))
+                    .toList();
+            when(invoiceService.findByDateRange(FROM, TO)).thenReturn(invoices);
+
+            String lastPage = extractLastPageText(salesReportPdfService.generate(FROM, TO));
+
+            assertTrue(lastPage.contains("Pedidos: " + count), "Pedidos con " + count + " facturas");
+            assertTrue(lastPage.contains("Total facturado:"), "Total con " + count + " facturas");
+            assertTrue(lastPage.contains("Ticket medio:"), "Ticket medio con " + count + " facturas");
+        }
+    }
+
+    @Test
     void shouldPropagateBadRequestWhenDatesAreInverted() {
         when(invoiceService.findByDateRange(TO, FROM)).thenThrow(
                 new ResponseStatusException(HttpStatus.BAD_REQUEST));
@@ -132,6 +148,14 @@ class SalesReportPdfServiceTest {
 
     private InvoiceDTOResponse invoice(int orderId, String number, String amount, LocalDateTime issuedAt) {
         return new InvoiceDTOResponse(orderId, orderId, number, new BigDecimal(amount), issuedAt);
+    }
+
+    private String extractLastPageText(byte[] pdf) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setStartPage(document.getNumberOfPages());
+            return stripper.getText(document);
+        }
     }
 
     private String extractText(byte[] pdf) throws IOException {

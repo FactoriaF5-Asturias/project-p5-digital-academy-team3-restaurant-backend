@@ -54,7 +54,9 @@ public class SalesReportPdfService {
                     writer.write(regular, 11, "Sin ventas en el periodo");
                 }
                 writer.skipLine();
-                for (String line : totalsLines(invoices)) {
+                List<String> totals = totalsLines(invoices);
+                writer.keepTogether(totals.size());
+                for (String line : totals) {
                     writer.write(bold, 11, line);
                 }
             }
@@ -118,6 +120,12 @@ public class SalesReportPdfService {
             content.showText(text);
             content.endText();
             y -= LINE_HEIGHT;
+        }
+
+        private void keepTogether(int lines) throws IOException {
+            if (y - (lines - 1) * LINE_HEIGHT < MARGIN) {
+                newPage();
+            }
         }
 
         private void skipLine() {
