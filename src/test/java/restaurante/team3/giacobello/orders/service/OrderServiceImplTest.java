@@ -23,10 +23,14 @@ import restaurante.team3.giacobello.tablets.repository.TabletRepository;
 
 import org.springframework.http.HttpStatus;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -59,7 +63,7 @@ class OrderServiceImplTest {
         private OrderServiceImpl orderService;
 
         @Test
-        void shouldCreateInvoiceWhenOrderIsCreated() {
+        void shouldNotCreateInvoiceWhenOrderIsCreated() {
                 ProductEntity product = org.mockito.Mockito.mock(ProductEntity.class);
                 OrderCreateDTORequest request = new OrderCreateDTORequest(
                                 2,
@@ -73,6 +77,7 @@ class OrderServiceImplTest {
                                 "CASH",
                                 "PENDING",
                                 new java.math.BigDecimal("25.00"),
+                                null,
                                 null,
                                 List.of());
 
@@ -90,13 +95,10 @@ class OrderServiceImplTest {
 
                 orderService.create(request);
 
-                ArgumentCaptor<InvoiceEntity> invoiceCaptor = ArgumentCaptor.forClass(InvoiceEntity.class);
-                verify(invoiceRepository).save(invoiceCaptor.capture());
-                InvoiceEntity invoice = invoiceCaptor.getValue();
-                assertEquals(7, invoice.getOrderId());
-                assertEquals("INV-7", invoice.getInvoiceNumber());
-                assertEquals(new java.math.BigDecimal("25.00"), invoice.getTotalAmount());
-                org.junit.jupiter.api.Assertions.assertNotNull(invoice.getIssuedAt());
+                ArgumentCaptor<OrderEntity> orderCaptor = ArgumentCaptor.forClass(OrderEntity.class);
+                verify(orderRepository).save(orderCaptor.capture());
+                assertNull(orderCaptor.getValue().getPaidAt());
+                verifyNoInteractions(invoiceRepository);
         }
 
         @Test
@@ -108,6 +110,7 @@ class OrderServiceImplTest {
                                 "DINE_IN",
                                 "CARD",
                                 "IN PROGRESS",
+                                null,
                                 null,
                                 null,
                                 List.of());
@@ -133,6 +136,7 @@ class OrderServiceImplTest {
                                 "PENDING",
                                 null,
                                 null,
+                                null,
                                 List.of());
                 when(orderRepository.findById(1))
                                 .thenReturn(Optional.of(order));
@@ -153,5 +157,76 @@ class OrderServiceImplTest {
                                 () -> orderService.findById(99));
                 assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
                 verifyNoInteractions(orderMapper);
+        }
+
+        @Test
+        void shouldReturnNotFoundWhenPayingAMissingOrder() {
+                when(orderRepository.findByIdForUpdate(99)).thenReturn(Optional.empty());
+
+                ResponseStatusException exception = assertThrows(
+                                ResponseStatusException.class,
+                                () -> orderService.pay(99));
+
+                assertEquals(HttpStatus.NOT_FOUND, exception.getStatusCode());
+                verifyNoInteractions(invoiceRepository);
+        }
+
+        @Test
+        void shouldReturnConflictWhenOrderIsAlreadyPaid() {
+                OrderEntity order = orderWith(7, "COMPLETED");
+                order.setPaidAt(LocalDateTime.of(2026, 9, 28, 13, 0));
+                when(orderRepository.findByIdForUpdate(7)).thenReturn(Optional.of(order));
+
+                ResponseStatusException exception = assertThrows(
+                                ResponseStatusException.class,
+                                () -> orderService.pay(7));
+
+                assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+                verifyNoInteractions(invoiceRepository);
+        }
+
+        @Test
+        void shouldReturnConflictWhenOrderIsCancelled() {
+                OrderEntity order = orderWith(7, "CANCELLED");
+                when(orderRepository.findByIdForUpdate(7)).thenReturn(Optional.of(order));
+
+                ResponseStatusException exception = assertThrows(
+                                ResponseStatusException.class,
+                                () -> orderService.pay(7));
+
+                assertEquals(HttpStatus.CONFLICT, exception.getStatusCode());
+                assertNull(order.getPaidAt());
+                verifyNoInteractions(invoiceRepository);
+        }
+
+        @Test
+        void shouldMarkOrderAsPaidAndIssueItsInvoice() {
+                OrderEntity order = orderWith(7, "COMPLETED");
+                OrderDTOResponse response = new OrderDTOResponse(
+                                7, 2, "DINE IN", "CASH", "COMPLETED",
+                                new BigDecimal("25.00"), null, null, List.of());
+                when(orderRepository.findByIdForUpdate(7)).thenReturn(Optional.of(order));
+                when(orderRepository.save(order)).thenReturn(order);
+                when(orderMapper.toResponse(order)).thenReturn(response);
+
+                OrderDTOResponse result = orderService.pay(7);
+
+                assertEquals(response, result);
+                assertNotNull(order.getPaidAt());
+                assertEquals("COMPLETED", order.getStatusName());
+                ArgumentCaptor<InvoiceEntity> invoiceCaptor = ArgumentCaptor.forClass(InvoiceEntity.class);
+                verify(invoiceRepository).save(invoiceCaptor.capture());
+                InvoiceEntity invoice = invoiceCaptor.getValue();
+                assertEquals(7, invoice.getOrderId());
+                assertEquals("INV-7", invoice.getInvoiceNumber());
+                assertEquals(new BigDecimal("25.00"), invoice.getTotalAmount());
+                assertEquals(order.getPaidAt(), invoice.getIssuedAt());
+        }
+
+        private OrderEntity orderWith(Integer id, String statusName) {
+                return new OrderEntity(
+                                id, 2, "DINE IN", "CASH", statusName,
+                                new BigDecimal("25.00"),
+                                LocalDateTime.of(2026, 9, 28, 12, 30));
         }
 }

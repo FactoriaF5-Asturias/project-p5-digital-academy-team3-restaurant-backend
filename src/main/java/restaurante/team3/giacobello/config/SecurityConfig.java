@@ -59,6 +59,9 @@ public class SecurityConfig {
                 auth.requestMatchers(
                         HttpMethod.PUT,
                         apiEndpoint + "/orders/*/status").permitAll();
+                auth.requestMatchers(
+                        HttpMethod.PUT,
+                        apiEndpoint + "/orders/*/pay").permitAll();
             }
             auth.anyRequest().authenticated();
         });
@@ -75,7 +78,11 @@ public class SecurityConfig {
                         && path.startsWith(apiEndpoint + "/orders/")
                         && path.endsWith("/status");
 
-                return isCreateOrder || isUpdateOrderStatus;
+                boolean isPayOrder = "PUT".equals(method)
+                        && path.startsWith(apiEndpoint + "/orders/")
+                        && path.endsWith("/pay");
+
+                return isCreateOrder || isUpdateOrderStatus || isPayOrder;
             }));
         }
         return http.build();
