@@ -19,7 +19,7 @@ public class InvoicePdfService {
 
     private static final List<String> TABLE_HEADER = List.of("Producto", "Cant.", "Precio", "Subtotal");
     private static final List<PdfColumn> TABLE_COLUMNS = List.of(
-            PdfColumn.left(PdfReportWriter.MARGIN),
+            PdfColumn.left(PdfReportWriter.MARGIN, 260),
             PdfColumn.right(360),
             PdfColumn.right(450),
             PdfColumn.right(PdfReportWriter.RIGHT_EDGE));
