@@ -20,6 +20,8 @@ public final class PdfReportWriter implements AutoCloseable {
     private static final float LINE_HEIGHT = 22;
     private static final float TITLE_SIZE = 18;
     private static final float TEXT_SIZE = 11;
+    private static final String UNSUPPORTED_CHARACTER = "?";
+    private static final String ELLIPSIS = "…";
 
     private final PDDocument document;
     private final PDFont regular;
@@ -33,7 +35,12 @@ public final class PdfReportWriter implements AutoCloseable {
         this.document = new PDDocument();
         this.regular = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
         this.bold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
-        newPage();
+        try {
+            newPage();
+        } catch (IOException | RuntimeException e) {
+            document.close();
+            throw e;
+        }
     }
 
     public void title(String text) throws IOException {
@@ -91,23 +98,60 @@ public final class PdfReportWriter implements AutoCloseable {
         if (y < MARGIN) {
             newPage();
         }
-        showText(font, size, MARGIN, text);
+        showText(font, size, MARGIN, sanitize(font, text));
         y -= LINE_HEIGHT;
     }
 
     private void writeCells(PDFont font, List<String> cells) throws IOException {
+        if (cells.size() != tableColumns.size()) {
+            throw new IllegalArgumentException(
+                    "La fila tiene " + cells.size() + " celdas y la tabla " + tableColumns.size() + " columnas");
+        }
         if (y < MARGIN) {
             newPage();
         }
         for (int i = 0; i < tableColumns.size(); i++) {
             PdfColumn column = tableColumns.get(i);
-            String cell = cells.get(i);
+            String cell = fitWidth(font, sanitize(font, cells.get(i)), column.maxWidth());
             float x = column.rightAligned()
-                    ? column.x() - font.getStringWidth(cell) / 1000 * TEXT_SIZE
+                    ? column.x() - width(font, cell)
                     : column.x();
             showText(font, TEXT_SIZE, x, cell);
         }
         y -= LINE_HEIGHT;
+    }
+
+    private String sanitize(PDFont font, String text) {
+        StringBuilder safe = new StringBuilder(text.length());
+        text.codePoints().forEach(codePoint -> {
+            String character = Character.isISOControl(codePoint) ? " " : Character.toString(codePoint);
+            safe.append(canEncode(font, character) ? character : UNSUPPORTED_CHARACTER);
+        });
+        return safe.toString();
+    }
+
+    private boolean canEncode(PDFont font, String character) {
+        try {
+            font.encode(character);
+            return true;
+        } catch (IllegalArgumentException | IOException e) {
+            return false;
+        }
+    }
+
+    private String fitWidth(PDFont font, String text, float maxWidth) throws IOException {
+        if (width(font, text) <= maxWidth) {
+            return text;
+        }
+        String truncated = text;
+        while (!truncated.isEmpty() && width(font, truncated + ELLIPSIS) > maxWidth) {
+            truncated = truncated.substring(0, truncated.length() - 1);
+        }
+        return truncated.stripTrailing() + ELLIPSIS;
+    }
+
+    private float width(PDFont font, String text) throws IOException {
+        return font.getStringWidth(text) / 1000 * TEXT_SIZE;
     }
 
     private void writeTableHeader() throws IOException {
