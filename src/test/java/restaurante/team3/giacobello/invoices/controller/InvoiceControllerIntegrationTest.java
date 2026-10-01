@@ -1,15 +1,26 @@
 package restaurante.team3.giacobello.invoices.controller;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import restaurante.team3.giacobello.infrastructure.IntegrationTest;
@@ -80,7 +91,11 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.daily").value(10.0))
                 .andExpect(jsonPath("$.monthly").value(30.0))
                 .andExpect(jsonPath("$.quarterly").value(70.0))
-                .andExpect(jsonPath("$.yearly").value(150.0));
+                .andExpect(jsonPath("$.yearly").value(150.0))
+                .andExpect(jsonPath("$.dailyOrders").value(1))
+                .andExpect(jsonPath("$.monthlyOrders").value(2))
+                .andExpect(jsonPath("$.quarterlyOrders").value(3))
+                .andExpect(jsonPath("$.yearlyOrders").value(4));
     }
 
     @Test
@@ -91,7 +106,74 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.daily").value(0))
                 .andExpect(jsonPath("$.monthly").value(0))
                 .andExpect(jsonPath("$.quarterly").value(0))
-                .andExpect(jsonPath("$.yearly").value(0));
+                .andExpect(jsonPath("$.yearly").value(0))
+                .andExpect(jsonPath("$.dailyOrders").value(0))
+                .andExpect(jsonPath("$.monthlyOrders").value(0))
+                .andExpect(jsonPath("$.quarterlyOrders").value(0))
+                .andExpect(jsonPath("$.yearlyOrders").value(0));
+    }
+
+    @Test
+    @Transactional
+    void salesReportPdfReturnsPdfWithInvoicesOfTheRequestedQuarter() throws Exception {
+        saveInvoice("INV-Q3-JUL", LocalDateTime.of(2032, 7, 1, 9, 0));
+        saveInvoice("INV-Q3-SEP", LocalDateTime.of(2032, 9, 30, 23, 30));
+        saveInvoice("INV-Q4-OCT", LocalDateTime.of(2032, 10, 1, 0, 30));
+
+        MvcResult result = mockMvc.perform(get("/api/v1/invoices/report/pdf")
+                .param("period", "QUARTER")
+                .param("date", "2032-08-15"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(header().string(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"ventas-2032-07-01_2032-09-30.pdf\""))
+                .andReturn();
+
+        String text = extractText(result.getResponse().getContentAsByteArray());
+        assertTrue(text.contains("01/07/2032 - 30/09/2032"));
+        assertTrue(text.contains("INV-Q3-JUL"));
+        assertTrue(text.contains("INV-Q3-SEP"));
+        assertFalse(text.contains("INV-Q4-OCT"));
+        assertTrue(text.contains("Pedidos: 2"));
+    }
+
+    @Test
+    void salesReportPdfWithoutDateUsesToday() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices/report/pdf")
+                .param("period", "DAY"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+    }
+
+    @Test
+    void salesReportPdfExposesContentDispositionToTheFrontend() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices/report/pdf")
+                .param("period", "DAY")
+                .header(HttpHeaders.ORIGIN, "http://localhost:5173"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(
+                        HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
+                        HttpHeaders.CONTENT_DISPOSITION));
+    }
+
+    @Test
+    void salesReportPdfWithUnknownPeriodReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices/report/pdf")
+                .param("period", "WEEK"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void salesReportPdfWithoutPeriodReturnsBadRequest() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices/report/pdf"))
+                .andExpect(status().isBadRequest());
+    }
+
+    private String extractText(byte[] pdf) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            return new PDFTextStripper().getText(document);
+        }
     }
 
     private void saveInvoice(String invoiceNumber, LocalDateTime issuedAt) {

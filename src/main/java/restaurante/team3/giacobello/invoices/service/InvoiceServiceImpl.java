@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.temporal.IsoFields;
-import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import org.springframework.data.domain.Sort;
 
@@ -74,25 +72,26 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     @Transactional(readOnly = true)
     public SalesTotalsDTOResponse findSalesTotals(LocalDate date) {
-        LocalDate quarterStart = date.with(IsoFields.DAY_OF_QUARTER, 1);
-        LocalDate quarterEnd = date.with(
-                IsoFields.DAY_OF_QUARTER,
-                date.range(IsoFields.DAY_OF_QUARTER).getMaximum());
-
         return new SalesTotalsDTOResponse(
-                sumSalesBetween(date, date),
-                sumSalesBetween(
-                        date.with(TemporalAdjusters.firstDayOfMonth()),
-                        date.with(TemporalAdjusters.lastDayOfMonth())),
-                sumSalesBetween(quarterStart, quarterEnd),
-                sumSalesBetween(
-                        date.with(TemporalAdjusters.firstDayOfYear()),
-                        date.with(TemporalAdjusters.lastDayOfYear())));
+                sumSales(ReportPeriod.DAY, date),
+                sumSales(ReportPeriod.MONTH, date),
+                sumSales(ReportPeriod.QUARTER, date),
+                sumSales(ReportPeriod.YEAR, date),
+                countOrders(ReportPeriod.DAY, date),
+                countOrders(ReportPeriod.MONTH, date),
+                countOrders(ReportPeriod.QUARTER, date),
+                countOrders(ReportPeriod.YEAR, date));
     }
 
-    private BigDecimal sumSalesBetween(LocalDate from, LocalDate to) {
+    private BigDecimal sumSales(ReportPeriod period, LocalDate date) {
         return invoiceRepository.sumTotalAmountByIssuedAtBetween(
-                from.atStartOfDay(),
-                to.atTime(LocalTime.MAX));
+                period.from(date).atStartOfDay(),
+                period.to(date).atTime(LocalTime.MAX));
+    }
+
+    private long countOrders(ReportPeriod period, LocalDate date) {
+        return invoiceRepository.countByIssuedAtBetween(
+                period.from(date).atStartOfDay(),
+                period.to(date).atTime(LocalTime.MAX));
     }
 }

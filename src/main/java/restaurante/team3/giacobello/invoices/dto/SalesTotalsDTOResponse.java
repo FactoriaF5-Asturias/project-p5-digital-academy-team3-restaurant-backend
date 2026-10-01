@@ -6,5 +6,9 @@ public record SalesTotalsDTOResponse(
         BigDecimal daily,
         BigDecimal monthly,
         BigDecimal quarterly,
-        BigDecimal yearly) {
+        BigDecimal yearly,
+        long dailyOrders,
+        long monthlyOrders,
+        long quarterlyOrders,
+        long yearlyOrders) {
 }

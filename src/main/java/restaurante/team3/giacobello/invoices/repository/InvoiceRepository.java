@@ -18,4 +18,6 @@ public interface InvoiceRepository extends JpaRepository<InvoiceEntity, Integer>
 
     @Query("SELECT COALESCE(SUM(i.totalAmount), 0) FROM InvoiceEntity i WHERE i.issuedAt BETWEEN :from AND :to")
     BigDecimal sumTotalAmountByIssuedAtBetween(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
+
+    long countByIssuedAtBetween(LocalDateTime from, LocalDateTime to);
 }
