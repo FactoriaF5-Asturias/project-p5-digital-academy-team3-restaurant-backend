@@ -41,6 +41,9 @@ public class SecurityConfig {
                     .requestMatchers("/images/**", "/error").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/products").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/products/*").permitAll()
+                    .requestMatchers(HttpMethod.POST, apiEndpoint + "/products").permitAll()
+                    .requestMatchers(HttpMethod.PUT, apiEndpoint + "/products/*").permitAll()
+                    .requestMatchers(HttpMethod.DELETE, apiEndpoint + "/products/*").permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/orders", apiEndpoint + "/orders/*").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/tablets").permitAll()
@@ -66,10 +69,16 @@ public class SecurityConfig {
             auth.anyRequest().authenticated();
         });
 
-        if (devProfile) {
-            http.csrf(csrf -> csrf.ignoringRequestMatchers(request -> {
+        http.csrf(csrf -> csrf.ignoringRequestMatchers(request -> {
                 String method = request.getMethod();
                 String path = request.getServletPath();
+
+                boolean isCreateProduct = "POST".equals(method)
+                        && (apiEndpoint + "/products").equals(path);
+
+                boolean isModifyProduct = ("PUT".equals(method) || "DELETE".equals(method))
+                        && path.startsWith(apiEndpoint + "/products/")
+                        && path.substring((apiEndpoint + "/products/").length()).matches("[^/]+");
 
                 boolean isCreateOrder = "POST".equals(method)
                         && (apiEndpoint + "/orders").equals(path);
@@ -82,9 +91,9 @@ public class SecurityConfig {
                         && path.startsWith(apiEndpoint + "/orders/")
                         && path.endsWith("/pay");
 
-                return isCreateOrder || isUpdateOrderStatus || isPayOrder;
+                return isCreateProduct || isModifyProduct
+                        || (devProfile && (isCreateOrder || isUpdateOrderStatus || isPayOrder));
             }));
-        }
         return http.build();
     }
 }
