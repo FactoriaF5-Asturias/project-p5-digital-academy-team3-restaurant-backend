@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -53,6 +54,16 @@ public class SalesReportPdfService {
                     content.newLineAtOffset(0, -18);
                     content.showText(invoiceLine(invoice));
                 }
+                if (invoices.isEmpty()) {
+                    content.newLineAtOffset(0, -18);
+                    content.showText("Sin ventas en el periodo");
+                }
+                content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 11);
+                content.newLineAtOffset(0, -30);
+                for (String line : totalsLines(invoices)) {
+                    content.showText(line);
+                    content.newLineAtOffset(0, -18);
+                }
                 content.endText();
             }
             document.addPage(page);
@@ -62,6 +73,20 @@ public class SalesReportPdfService {
             throw new UncheckedIOException("No se pudo generar el PDF", e);
         }
 
+    }
+
+    private List<String> totalsLines(List<InvoiceDTOResponse> invoices) {
+        BigDecimal total = invoices.stream()
+                .map(InvoiceDTOResponse::totalAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal averageTicket = invoices.isEmpty()
+                ? BigDecimal.ZERO
+                : total.divide(BigDecimal.valueOf(invoices.size()), 2, RoundingMode.HALF_UP);
+
+        return List.of(
+                "Pedidos: " + invoices.size(),
+                "Total facturado: " + formatAmount(total),
+                "Ticket medio: " + formatAmount(averageTicket));
     }
 
     private String invoiceLine(InvoiceDTOResponse invoice) {
