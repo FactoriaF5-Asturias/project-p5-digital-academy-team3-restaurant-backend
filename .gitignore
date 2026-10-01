@@ -32,6 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 .env
+.temp
 
 ### Documentos a ignorar ###
 *db-docu.md
