@@ -76,11 +76,21 @@ public class InvoiceServiceImpl implements InvoiceService {
                 sumSales(ReportPeriod.DAY, date),
                 sumSales(ReportPeriod.MONTH, date),
                 sumSales(ReportPeriod.QUARTER, date),
-                sumSales(ReportPeriod.YEAR, date));
+                sumSales(ReportPeriod.YEAR, date),
+                countOrders(ReportPeriod.DAY, date),
+                countOrders(ReportPeriod.MONTH, date),
+                countOrders(ReportPeriod.QUARTER, date),
+                countOrders(ReportPeriod.YEAR, date));
     }
 
     private BigDecimal sumSales(ReportPeriod period, LocalDate date) {
         return invoiceRepository.sumTotalAmountByIssuedAtBetween(
+                period.from(date).atStartOfDay(),
+                period.to(date).atTime(LocalTime.MAX));
+    }
+
+    private long countOrders(ReportPeriod period, LocalDate date) {
+        return invoiceRepository.countByIssuedAtBetween(
                 period.from(date).atStartOfDay(),
                 period.to(date).atTime(LocalTime.MAX));
     }

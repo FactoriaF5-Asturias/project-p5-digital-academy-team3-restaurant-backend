@@ -91,7 +91,11 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.daily").value(10.0))
                 .andExpect(jsonPath("$.monthly").value(30.0))
                 .andExpect(jsonPath("$.quarterly").value(70.0))
-                .andExpect(jsonPath("$.yearly").value(150.0));
+                .andExpect(jsonPath("$.yearly").value(150.0))
+                .andExpect(jsonPath("$.dailyOrders").value(1))
+                .andExpect(jsonPath("$.monthlyOrders").value(2))
+                .andExpect(jsonPath("$.quarterlyOrders").value(3))
+                .andExpect(jsonPath("$.yearlyOrders").value(4));
     }
 
     @Test
@@ -102,7 +106,11 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.daily").value(0))
                 .andExpect(jsonPath("$.monthly").value(0))
                 .andExpect(jsonPath("$.quarterly").value(0))
-                .andExpect(jsonPath("$.yearly").value(0));
+                .andExpect(jsonPath("$.yearly").value(0))
+                .andExpect(jsonPath("$.dailyOrders").value(0))
+                .andExpect(jsonPath("$.monthlyOrders").value(0))
+                .andExpect(jsonPath("$.quarterlyOrders").value(0))
+                .andExpect(jsonPath("$.yearlyOrders").value(0));
     }
 
     @Test
