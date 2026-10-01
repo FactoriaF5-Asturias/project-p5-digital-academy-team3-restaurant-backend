@@ -28,8 +28,6 @@ public class SalesReportPdfService {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final Locale SPAIN = Locale.of("es", "ES");
-    private static final PDFont REGULAR = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-    private static final PDFont BOLD = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
 
     private final InvoiceService invoiceService;
 
@@ -40,22 +38,24 @@ public class SalesReportPdfService {
     public byte[] generate(LocalDate from, LocalDate to) {
 
         List<InvoiceDTOResponse> invoices = invoiceService.findByDateRange(from, to);
+        PDFont regular = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        PDFont bold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
 
         try (PDDocument document = new PDDocument();
                 ByteArrayOutputStream output = new ByteArrayOutputStream()) {
             try (PageWriter writer = new PageWriter(document)) {
-                writer.write(BOLD, 18, "Giacobello - Resumen de ventas");
-                writer.write(BOLD, 18, from.format(DATE_FORMAT) + " - " + to.format(DATE_FORMAT));
+                writer.write(bold, 18, "Giacobello - Resumen de ventas");
+                writer.write(bold, 18, from.format(DATE_FORMAT) + " - " + to.format(DATE_FORMAT));
                 writer.skipLine();
                 for (InvoiceDTOResponse invoice : invoices) {
-                    writer.write(REGULAR, 11, invoiceLine(invoice));
+                    writer.write(regular, 11, invoiceLine(invoice));
                 }
                 if (invoices.isEmpty()) {
-                    writer.write(REGULAR, 11, "Sin ventas en el periodo");
+                    writer.write(regular, 11, "Sin ventas en el periodo");
                 }
                 writer.skipLine();
                 for (String line : totalsLines(invoices)) {
-                    writer.write(BOLD, 11, line);
+                    writer.write(bold, 11, line);
                 }
             }
             document.save(output);
