@@ -59,10 +59,13 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/webjars/**",
                     "/images/**",
+                    "/error",
                     endpoint + "/auth/token"
                 ).permitAll()
-                .requestMatchers(HttpMethod.GET, endpoint + "/invoices", endpoint + "/orders/*/invoice")
-                    .authenticated()
+                .requestMatchers(HttpMethod.GET, endpoint + "/invoices", endpoint + "/invoices/**")
+                    .hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, endpoint + "/orders/*/invoice")
+                    .hasAnyRole("KITCHEN", "ADMIN")
                 .requestMatchers(HttpMethod.GET, endpoint + "/orders", endpoint + "/orders/*")
                     .hasAnyRole("KITCHEN", "ADMIN")
                 .requestMatchers(HttpMethod.PUT, endpoint + "/orders/*/status")
