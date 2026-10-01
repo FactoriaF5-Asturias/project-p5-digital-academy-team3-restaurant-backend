@@ -15,6 +15,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,8 @@ public class SalesReportPdfService {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final Locale SPAIN = Locale.of("es", "ES");
+    private static final PDFont REGULAR = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+    private static final PDFont BOLD = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
 
     private final InvoiceService invoiceService;
 
@@ -40,39 +43,26 @@ public class SalesReportPdfService {
 
         try (PDDocument document = new PDDocument();
                 ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            PDPage page = new PDPage(PDRectangle.A4);
-            try (PDPageContentStream content = new PDPageContentStream(document, page)) {
-                content.beginText();
-                content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 18);
-                content.newLineAtOffset(50, 790);
-                content.showText("Giacobello - Resumen de ventas");
-                content.newLineAtOffset(0, -25);
-                content.showText(from.format(DATE_FORMAT) + " - " + to.format(DATE_FORMAT));
-                content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), 11);
-                content.newLineAtOffset(0, -10);
+            try (PageWriter writer = new PageWriter(document)) {
+                writer.write(BOLD, 18, "Giacobello - Resumen de ventas");
+                writer.write(BOLD, 18, from.format(DATE_FORMAT) + " - " + to.format(DATE_FORMAT));
+                writer.skipLine();
                 for (InvoiceDTOResponse invoice : invoices) {
-                    content.newLineAtOffset(0, -18);
-                    content.showText(invoiceLine(invoice));
+                    writer.write(REGULAR, 11, invoiceLine(invoice));
                 }
                 if (invoices.isEmpty()) {
-                    content.newLineAtOffset(0, -18);
-                    content.showText("Sin ventas en el periodo");
+                    writer.write(REGULAR, 11, "Sin ventas en el periodo");
                 }
-                content.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD), 11);
-                content.newLineAtOffset(0, -30);
+                writer.skipLine();
                 for (String line : totalsLines(invoices)) {
-                    content.showText(line);
-                    content.newLineAtOffset(0, -18);
+                    writer.write(BOLD, 11, line);
                 }
-                content.endText();
             }
-            document.addPage(page);
             document.save(output);
             return output.toByteArray();
         } catch (IOException e) {
             throw new UncheckedIOException("No se pudo generar el PDF", e);
         }
-
     }
 
     private List<String> totalsLines(List<InvoiceDTOResponse> invoices) {
@@ -102,5 +92,51 @@ public class SalesReportPdfService {
 
     private String formatAmount(BigDecimal amount) {
         return String.format(SPAIN, "%,.2f €", amount);
+    }
+
+    private static final class PageWriter implements AutoCloseable {
+
+        private static final float MARGIN = 50;
+        private static final float LINE_HEIGHT = 22;
+
+        private final PDDocument document;
+        private PDPageContentStream content;
+        private float y;
+
+        private PageWriter(PDDocument document) throws IOException {
+            this.document = document;
+            newPage();
+        }
+
+        private void write(PDFont font, float size, String text) throws IOException {
+            if (y < MARGIN) {
+                newPage();
+            }
+            content.beginText();
+            content.setFont(font, size);
+            content.newLineAtOffset(MARGIN, y);
+            content.showText(text);
+            content.endText();
+            y -= LINE_HEIGHT;
+        }
+
+        private void skipLine() {
+            y -= LINE_HEIGHT;
+        }
+
+        private void newPage() throws IOException {
+            if (content != null) {
+                content.close();
+            }
+            PDPage page = new PDPage(PDRectangle.A4);
+            document.addPage(page);
+            content = new PDPageContentStream(document, page);
+            y = page.getMediaBox().getHeight() - MARGIN;
+        }
+
+        @Override
+        public void close() throws IOException {
+            content.close();
+        }
     }
 }
