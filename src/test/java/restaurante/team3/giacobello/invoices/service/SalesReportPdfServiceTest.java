@@ -135,6 +135,19 @@ class SalesReportPdfServiceTest {
     }
 
     @Test
+    void shouldFormatAmountsWithThousandsSeparator() throws IOException {
+        when(invoiceService.findByDateRange(FROM, TO)).thenReturn(List.of(
+                invoice(1, "INV-1", "1234.56", LocalDateTime.of(2026, 9, 1, 12, 0)),
+                invoice(2, "INV-2", "2000.00", LocalDateTime.of(2026, 9, 2, 12, 0))));
+
+        String text = extractText(salesReportPdfService.generate(FROM, TO));
+
+        assertTrue(text.contains("1.234,56 €"));
+        assertTrue(text.contains("Total facturado: 3.234,56 €"));
+        assertTrue(text.contains("Ticket medio: 1.617,28 €"));
+    }
+
+    @Test
     void shouldPropagateBadRequestWhenDatesAreInverted() {
         when(invoiceService.findByDateRange(TO, FROM)).thenThrow(
                 new ResponseStatusException(HttpStatus.BAD_REQUEST));
