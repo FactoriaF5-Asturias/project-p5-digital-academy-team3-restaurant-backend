@@ -28,6 +28,7 @@ public class SalesReportPdfService {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final Locale SPAIN = Locale.of("es", "ES");
+    private static final List<String> TABLE_HEADER = List.of("Factura", "Pedido", "Fecha", "Importe");
 
     private final InvoiceService invoiceService;
 
@@ -43,15 +44,18 @@ public class SalesReportPdfService {
 
         try (PDDocument document = new PDDocument();
                 ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-            try (PageWriter writer = new PageWriter(document)) {
+            try (PageWriter writer = new PageWriter(document, bold)) {
                 writer.write(bold, 18, "Giacobello - Resumen de ventas");
                 writer.write(bold, 18, from.format(DATE_FORMAT) + " - " + to.format(DATE_FORMAT));
                 writer.skipLine();
-                for (InvoiceDTOResponse invoice : invoices) {
-                    writer.write(regular, 11, invoiceLine(invoice));
-                }
                 if (invoices.isEmpty()) {
                     writer.write(regular, 11, "Sin ventas en el periodo");
+                } else {
+                    writer.startTable(TABLE_HEADER);
+                    for (InvoiceDTOResponse invoice : invoices) {
+                        writer.writeRow(regular, invoiceCells(invoice));
+                    }
+                    writer.endTable();
                 }
                 writer.skipLine();
                 List<String> totals = totalsLines(invoices);
@@ -81,11 +85,12 @@ public class SalesReportPdfService {
                 "Ticket medio: " + formatAmount(averageTicket));
     }
 
-    private String invoiceLine(InvoiceDTOResponse invoice) {
-        return invoice.invoiceNumber()
-                + "   Pedido " + invoice.orderId()
-                + "   " + formatDateTime(invoice.issuedAt())
-                + "   " + formatAmount(invoice.totalAmount());
+    private List<String> invoiceCells(InvoiceDTOResponse invoice) {
+        return List.of(
+                invoice.invoiceNumber(),
+                String.valueOf(invoice.orderId()),
+                formatDateTime(invoice.issuedAt()),
+                formatAmount(invoice.totalAmount()));
     }
 
     private String formatDateTime(LocalDateTime dateTime) {
@@ -99,14 +104,20 @@ public class SalesReportPdfService {
     private static final class PageWriter implements AutoCloseable {
 
         private static final float MARGIN = 50;
+        private static final float RIGHT_EDGE = 545;
         private static final float LINE_HEIGHT = 22;
+        private static final float TABLE_FONT_SIZE = 11;
+        private static final float[] COLUMN_X = {50, 170, 260};
 
         private final PDDocument document;
+        private final PDFont headerFont;
         private PDPageContentStream content;
+        private List<String> tableHeader = List.of();
         private float y;
 
-        private PageWriter(PDDocument document) throws IOException {
+        private PageWriter(PDDocument document, PDFont headerFont) throws IOException {
             this.document = document;
+            this.headerFont = headerFont;
             newPage();
         }
 
@@ -114,12 +125,47 @@ public class SalesReportPdfService {
             if (y < MARGIN) {
                 newPage();
             }
+            showText(font, size, MARGIN, text);
+            y -= LINE_HEIGHT;
+        }
+
+        private void startTable(List<String> header) throws IOException {
+            tableHeader = header;
+            writeHeader();
+        }
+
+        private void endTable() {
+            tableHeader = List.of();
+        }
+
+        private void writeRow(PDFont font, List<String> cells) throws IOException {
+            if (y < MARGIN) {
+                newPage();
+            }
+            for (int i = 0; i < COLUMN_X.length; i++) {
+                showText(font, TABLE_FONT_SIZE, COLUMN_X[i], cells.get(i));
+            }
+            String amount = cells.get(COLUMN_X.length);
+            float amountWidth = font.getStringWidth(amount) / 1000 * TABLE_FONT_SIZE;
+            showText(font, TABLE_FONT_SIZE, RIGHT_EDGE - amountWidth, amount);
+            y -= LINE_HEIGHT;
+        }
+
+        private void writeHeader() throws IOException {
+            writeRow(headerFont, tableHeader);
+            float lineY = y + LINE_HEIGHT - 7;
+            content.moveTo(MARGIN, lineY);
+            content.lineTo(RIGHT_EDGE, lineY);
+            content.setLineWidth(0.5f);
+            content.stroke();
+        }
+
+        private void showText(PDFont font, float size, float x, String text) throws IOException {
             content.beginText();
             content.setFont(font, size);
-            content.newLineAtOffset(MARGIN, y);
+            content.newLineAtOffset(x, y);
             content.showText(text);
             content.endText();
-            y -= LINE_HEIGHT;
         }
 
         private void keepTogether(int lines) throws IOException {
@@ -140,6 +186,9 @@ public class SalesReportPdfService {
             document.addPage(page);
             content = new PDPageContentStream(document, page);
             y = page.getMediaBox().getHeight() - MARGIN;
+            if (!tableHeader.isEmpty()) {
+                writeHeader();
+            }
         }
 
         @Override
