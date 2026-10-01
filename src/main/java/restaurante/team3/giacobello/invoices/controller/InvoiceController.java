@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import restaurante.team3.giacobello.invoices.dto.InvoiceDTOResponse;
 import restaurante.team3.giacobello.invoices.dto.SalesTotalsDTOResponse;
+import restaurante.team3.giacobello.invoices.service.InvoicePdfService;
 import restaurante.team3.giacobello.invoices.service.InvoiceService;
 import restaurante.team3.giacobello.invoices.service.ReportPeriod;
 import restaurante.team3.giacobello.invoices.service.SalesReportPdfService;
@@ -27,12 +28,15 @@ public class InvoiceController {
 
     private final InvoiceService invoiceService;
     private final SalesReportPdfService salesReportPdfService;
+    private final InvoicePdfService invoicePdfService;
 
     public InvoiceController(
             InvoiceService invoiceService,
-            SalesReportPdfService salesReportPdfService) {
+            SalesReportPdfService salesReportPdfService,
+            InvoicePdfService invoicePdfService) {
         this.invoiceService = invoiceService;
         this.salesReportPdfService = salesReportPdfService;
+        this.invoicePdfService = invoicePdfService;
     }
 
     @GetMapping("/orders/{id}/invoice")
@@ -40,6 +44,19 @@ public class InvoiceController {
             @PathVariable("id") Integer orderId) {
         return ResponseEntity.ok(
                 invoiceService.findByOrderId(orderId));
+    }
+
+    @GetMapping("/orders/{id}/invoice/pdf")
+    public ResponseEntity<byte[]> downloadInvoicePdf(
+            @PathVariable("id") Integer orderId) {
+        byte[] pdf = invoicePdfService.generate(orderId);
+        String fileName = "factura-pedido-" + orderId + ".pdf";
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(fileName).build().toString())
+                .body(pdf);
     }
 
     @GetMapping("/invoices")
