@@ -31,6 +31,11 @@ services:
       DATABASE_URL: jdbc:postgresql://postgres:5432/giacobello
       DATABASE_USERNAME: ${DATABASE_USERNAME}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      TZ: Europe/Madrid
+      SUPABASE_URL: ${SUPABASE_URL:-}
+      SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY:-}
+      SUPABASE_REPORTS_BUCKET: ${SUPABASE_REPORTS_BUCKET:-sales-reports}
+      SALES_REPORT_ARCHIVE_CRON: ${SALES_REPORT_ARCHIVE_CRON:-0 5 0 * * *}
     ports:
       - "8080:8080"
 
