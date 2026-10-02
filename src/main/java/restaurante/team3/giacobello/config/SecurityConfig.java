@@ -38,115 +38,125 @@ import com.nimbusds.jose.jwk.source.ImmutableSecret;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${jwt.key}")
-    private String key;
+        @Value("${jwt.key}")
+        private String key;
 
-    @Value("${api-endpoint}")
-    private String endpoint;
+        @Value("${api-endpoint}")
+        private String endpoint;
 
-    @Bean
+        @Bean
         public SecurityFilterChain securityFilterChain(
-            HttpSecurity http,
-            AuthenticationProvider authenticationProvider) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(corsConfiguration()))
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**",
-                    "/webjars/**",
-                    "/images/**",
-                    "/error",
-                    endpoint + "/auth/token"
-                ).permitAll()
-                .requestMatchers(HttpMethod.GET, endpoint + "/invoices", endpoint + "/invoices/**")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, endpoint + "/orders/*/invoice")
-                    .hasAnyRole("KITCHEN", "ADMIN")
-                .requestMatchers(HttpMethod.GET, endpoint + "/orders", endpoint + "/orders/*")
-                    .hasAnyRole("KITCHEN", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, endpoint + "/orders/*/status")
-                    .hasAnyRole("KITCHEN", "ADMIN")
-                .requestMatchers(HttpMethod.POST, endpoint + "/orders")
-                    .permitAll()
-                .requestMatchers(HttpMethod.POST, endpoint + "/categories", endpoint + "/products")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, endpoint + "/categories/**", endpoint + "/products/**")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, endpoint + "/categories/**", endpoint + "/products/**")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET,
-                        endpoint + "/categories", endpoint + "/categories/**",
-                        endpoint + "/products", endpoint + "/products/**",
-                        endpoint + "/tablets", endpoint + "/tablets/**",
-                        endpoint + "/paymentmethod")
-                    .permitAll()
-                .anyRequest().authenticated())
-            .authenticationProvider(authenticationProvider)
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
-                .decoder(jwtDecoder())
-                .jwtAuthenticationConverter(jwtAuthenticationConverter())));
+                        HttpSecurity http,
+                        AuthenticationProvider authenticationProvider) throws Exception {
+                http
+                                .cors(cors -> cors.configurationSource(corsConfiguration()))
+                                .csrf(AbstractHttpConfigurer::disable)
+                                .sessionManagement(session -> session
+                                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                                .authorizeHttpRequests(auth -> auth
+                                                .requestMatchers(
+                                                                "/swagger-ui/**",
+                                                                "/swagger-ui.html",
+                                                                "/v3/api-docs/**",
+                                                                "/webjars/**",
+                                                                "/images/**",
+                                                                "/error",
+                                                                endpoint + "/auth/token")
+                                                .permitAll()
+                                                .requestMatchers(HttpMethod.GET, endpoint + "/invoices",
+                                                                endpoint + "/invoices/**")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.GET, endpoint + "/orders/*/invoice")
+                                                .hasAnyRole("KITCHEN", "ADMIN")
+                                                .requestMatchers(HttpMethod.GET, endpoint + "/admin/products")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.GET, endpoint + "/orders",
+                                                                endpoint + "/orders/*")
+                                                .hasAnyRole("KITCHEN", "ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, endpoint + "/orders/*/pay")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, endpoint + "/orders/*/status")
+                                                .hasAnyRole("KITCHEN", "ADMIN")
+                                                .requestMatchers(HttpMethod.POST, endpoint + "/orders")
+                                                .permitAll()
+                                                .requestMatchers(HttpMethod.POST, endpoint + "/categories",
+                                                                endpoint + "/products")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, endpoint + "/categories/**",
+                                                                endpoint + "/products/**")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.DELETE, endpoint + "/categories/**",
+                                                                endpoint + "/products/**")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.GET,
+                                                                endpoint + "/categories", endpoint + "/categories/**",
+                                                                endpoint + "/products", endpoint + "/products/**",
+                                                                endpoint + "/tablets", endpoint + "/tablets/**",
+                                                                endpoint + "/paymentmethod")
+                                                .permitAll()
+                                                .anyRequest().authenticated())
+                                .authenticationProvider(authenticationProvider)
+                                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
+                                                .decoder(jwtDecoder())
+                                                .jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
-        return http.build();
-    }
+                return http.build();
+        }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+        @Bean
+        public PasswordEncoder passwordEncoder() {
+                return new BCryptPasswordEncoder();
+        }
 
-    @Bean
-    public AuthenticationProvider authenticationProvider(
-            UserDetailsService userDetailsService,
-            PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
-        return provider;
-    }
+        @Bean
+        public AuthenticationProvider authenticationProvider(
+                        UserDetailsService userDetailsService,
+                        PasswordEncoder passwordEncoder) {
+                DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+                provider.setPasswordEncoder(passwordEncoder);
+                return provider;
+        }
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
-    }
+        @Bean
+        public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+                return configuration.getAuthenticationManager();
+        }
 
-    @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        authoritiesConverter.setAuthoritiesClaimName("roles");
-        authoritiesConverter.setAuthorityPrefix("ROLE_");
+        @Bean
+        public JwtAuthenticationConverter jwtAuthenticationConverter() {
+                JwtGrantedAuthoritiesConverter authoritiesConverter = new JwtGrantedAuthoritiesConverter();
+                authoritiesConverter.setAuthoritiesClaimName("roles");
+                authoritiesConverter.setAuthorityPrefix("ROLE_");
 
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
-        return converter;
-    }
+                JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+                converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+                return converter;
+        }
 
-    @Bean
-    public JwtEncoder jwtEncoder() {
-        return new NimbusJwtEncoder(new ImmutableSecret<>(key.getBytes(StandardCharsets.UTF_8)));
-    }
+        @Bean
+        public JwtEncoder jwtEncoder() {
+                return new NimbusJwtEncoder(new ImmutableSecret<>(key.getBytes(StandardCharsets.UTF_8)));
+        }
 
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
-        SecretKeySpec secretKey = new SecretKeySpec(bytes, 0, bytes.length, "HmacSHA512");
-        return NimbusJwtDecoder.withSecretKey(secretKey)
-            .macAlgorithm(MacAlgorithm.HS512)
-            .build();
-    }
+        @Bean
+        public JwtDecoder jwtDecoder() {
+                byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
+                SecretKeySpec secretKey = new SecretKeySpec(bytes, 0, bytes.length, "HmacSHA512");
+                return NimbusJwtDecoder.withSecretKey(secretKey)
+                                .macAlgorithm(MacAlgorithm.HS512)
+                                .build();
+        }
 
-    @Bean
-    public CorsConfigurationSource corsConfiguration() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowCredentials(true);
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin"));
+        @Bean
+        public CorsConfigurationSource corsConfiguration() {
+                CorsConfiguration configuration = new CorsConfiguration();
+                configuration.setAllowCredentials(true);
+                configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+                configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
+                configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin"));
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
-    }
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", configuration);
+                return source;
+        }
 }
