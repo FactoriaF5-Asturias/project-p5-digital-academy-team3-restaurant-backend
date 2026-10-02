@@ -139,14 +139,14 @@ public class SecurityConfig {
                 return new NimbusJwtEncoder(new ImmutableSecret<>(key.getBytes(StandardCharsets.UTF_8)));
         }
 
-    @Bean
-    public JwtDecoder jwtDecoder() {
-        byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
-        SecretKeySpec secretKey = new SecretKeySpec(bytes, 0, bytes.length, "HmacSHA512");
-        return NimbusJwtDecoder.withSecretKey(secretKey)
-                .macAlgorithm(MacAlgorithm.HS512)
-                .build();
-    }
+        @Bean
+        public JwtDecoder jwtDecoder() {
+                byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
+                SecretKeySpec secretKey = new SecretKeySpec(bytes, 0, bytes.length, "HmacSHA512");
+                return NimbusJwtDecoder.withSecretKey(secretKey)
+                                .macAlgorithm(MacAlgorithm.HS512)
+                                .build();
+        }
 
         @Bean
         public CorsConfigurationSource corsConfiguration() {
