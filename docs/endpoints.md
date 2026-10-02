@@ -29,6 +29,7 @@ Method - Endpoint - Envia - Recibe
 | [X]   | PUT    | `/api/v1/orders/{id}/status`     | `id` del pedido + `status`                                         | Pedido con el nuevo estado                        |               |
 | [X]   | GET    | `/api/v1/orders/{id}/invoice`    | `id` del pedido                                                    | Datos de la factura en JSON                       |               |
 | [X]   | GET    | `/api/v1/invoices`               | ---                                                                | Lista de facturas en JSON                         | 500           |
+| [X]   | POST   | `/api/v1/invoices/report/archive` | `date` opcional (`AAAA-MM-DD`, por defecto ayer)                  | Sube el PDF de ventas de ese día a Supabase: `{date, path}` | 400, 502, 503 |
 | [ ]   | WS     | `/ws/orders/{id}`                | `id` del pedido                                                    | Actualizaciones del estado en tiempo real         |               |
 
 ## Probar peticiones de endpoints

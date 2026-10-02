@@ -38,6 +38,8 @@ Con `SUPABASE_URL` y `SUPABASE_SERVICE_KEY` rellenas, el backend genera cada noc
 
 La hora se cambia con `SALES_REPORT_ARCHIVE_CRON` (expresión cron de Spring) y el bucket con `SUPABASE_REPORTS_BUCKET`.
 
+Para subirlo a mano sin esperar a la noche (por ejemplo, en una demo): `POST /api/v1/invoices/report/archive?date=AAAA-MM-DD`. Sin `date` sube el de ayer. Devuelve 503 si Supabase no está configurado y 502 si falla la subida.
+
 ### Opción A: todo en Docker
 
 Levanta PostgreSQL y el backend:
