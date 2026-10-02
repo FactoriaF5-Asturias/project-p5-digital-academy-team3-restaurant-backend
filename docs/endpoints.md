@@ -190,6 +190,8 @@ Content-Type: application/json
 }
 ```
 
+Valores admitidos: `orderTypeName` = `DINE IN` o `TAKEAWAY`; `paymentMethodName` = `CASH` o `CARD`. Cualquier otro (incluido `DELIVERY`) devuelve 400.
+
 4. Respuesta tiene quer ser: 201 ok, significa que el order ha sido creado. Para verlo usar otro endpoint GET api/v1/orders o GET /api/orders/{id}.
 
 #### PUT /api/v1/orders/{id}/status
