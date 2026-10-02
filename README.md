@@ -48,7 +48,7 @@ docker compose --profile app up -d --build
 
 La API queda en `http://localhost:8080/api/v1` y Swagger en `http://localhost:8080/swagger-ui/index.html`. Flyway crea las tablas y carga los datos de ejemplo al arrancar.
 
-Para pararlo: `docker compose --profile app down`.
+Para pararlo: `docker compose --profile app down`. Cómo están montados la imagen y el compose: [docs/docker.md](docs/docker.md).
 
 ### Opción B: base de datos en Docker y backend en local
 

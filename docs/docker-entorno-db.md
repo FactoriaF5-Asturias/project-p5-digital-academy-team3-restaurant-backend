@@ -1,5 +1,7 @@
 # Levantar PostgreSQL con Docker para el backend
 
+> Desactualizado: ahora la base de datos y la API se levantan con `docker compose`. Ver [docker.md](docker.md).
+
 Esta opcion permite arrancar la base de datos PostgreSQL sin instalar PostgreSQL manualmente en el ordenador.
 
 **NOTA**: NO USAR HASTA HABER TERMINADO MVP.
