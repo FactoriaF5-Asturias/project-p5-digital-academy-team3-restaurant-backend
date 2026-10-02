@@ -26,6 +26,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import com.jayway.jsonpath.JsonPath;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,6 +118,49 @@ class OrderControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.statusName").value("PENDING"))
                 .andExpect(jsonPath("$.totalAmount").value(33.0))
                 .andExpect(jsonPath("$.items.length()").value(2));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "DINE IN, CARD",
+            "TAKEAWAY, CASH",
+            "TAKEAWAY, CARD"
+    })
+    @Transactional
+    void createAcceptsInSituOrderTypesAndPaymentMethods(
+            String orderTypeName,
+            String paymentMethodName) throws Exception {
+        deleteOrders();
+
+        mockMvc.perform(post("/api/v1/orders")
+                .servletPath("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createOrderBody(orderTypeName, paymentMethodName)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.orderTypeName").value(orderTypeName))
+                .andExpect(jsonPath("$.paymentMethodName").value(paymentMethodName));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "DELIVERY, CASH",
+            "DELIVERY, CARD",
+            "DINE IN, BIZUM",
+            "TO GO, CASH"
+    })
+    @Transactional
+    void createRejectsUnsupportedOrderTypesAndPaymentMethods(
+            String orderTypeName,
+            String paymentMethodName) throws Exception {
+        deleteOrders();
+
+        mockMvc.perform(post("/api/v1/orders")
+                .servletPath("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(createOrderBody(orderTypeName, paymentMethodName)))
+                .andExpect(status().isBadRequest());
+
+        assertEquals(0, orderRepository.count());
     }
 
     @Test
@@ -275,6 +320,17 @@ class OrderControllerIntegrationTest extends IntegrationTest {
                 new BigDecimal("120.00"),
                 LocalDateTime.of(2026, 9, 28, 12, 30));
         return orderRepository.saveAndFlush(order);
+    }
+
+    private String createOrderBody(String orderTypeName, String paymentMethodName) {
+        return """
+                {
+                  "tabletId": 3,
+                  "orderTypeName": "%s",
+                  "paymentMethodName": "%s",
+                  "items": [ { "productId": 1, "quantity": 1 } ]
+                }
+                """.formatted(orderTypeName, paymentMethodName);
     }
 
     private void deleteOrders() {
