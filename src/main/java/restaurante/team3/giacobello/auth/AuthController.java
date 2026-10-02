@@ -54,11 +54,17 @@ public class AuthController {
     }
 
     private Authentication authenticate(String username, String password) {
-    try {
-        return authenticationManager.authenticate(
-                UsernamePasswordAuthenticationToken.unauthenticated(username, password));
-    } catch (AuthenticationException exception) {
-        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+        try {
+            return authenticationManager.authenticate(
+                    UsernamePasswordAuthenticationToken.unauthenticated(username, password));
+        } catch (AuthenticationException exception) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+        }
     }
-}
+
+    private UserAuthEntity findUser(String username) {
+        return userAuthRepository.findByUsername(username)
+                .orElseThrow(
+                        () -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
+    }
 }
