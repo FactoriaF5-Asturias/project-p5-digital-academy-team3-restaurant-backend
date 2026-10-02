@@ -19,7 +19,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import restaurante.team3.giacobello.auth.dto.ChangePasswordRequest;
 import restaurante.team3.giacobello.auth.entity.UserAuthEntity;
-import restaurante.team3.giacobello.auth.repository.UserAuthRepository;
 
 @RestController
 @RequestMapping(path = "${api-endpoint}/auth")
