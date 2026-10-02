@@ -78,6 +78,12 @@ class ProductControllerIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void adminProductsRequiresAuthentication() throws Exception {
+        mockMvc.perform(get("/api/v1/admin/products"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void findByIdReturnsNotFoundWhenProductDoesNotExist() throws Exception {
         mockMvc.perform(get("/api/v1/products/100"))
                 .andExpect(status().isNotFound())
