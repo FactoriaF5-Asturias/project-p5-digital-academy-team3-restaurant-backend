@@ -3,6 +3,7 @@ package restaurante.team3.giacobello.config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -22,6 +23,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of("http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of(HttpHeaders.CONTENT_DISPOSITION));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
@@ -41,13 +43,20 @@ public class SecurityConfig {
                     .requestMatchers("/images/**", "/error").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/products").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/products/*").permitAll()
+                    .requestMatchers(HttpMethod.POST, apiEndpoint + "/products").permitAll()
+                    .requestMatchers(HttpMethod.PUT, apiEndpoint + "/products/*").permitAll()
+                    .requestMatchers(HttpMethod.DELETE, apiEndpoint + "/products/*").permitAll()
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/orders", apiEndpoint + "/orders/*").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/tablets").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/tablets/*").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/categories/*").permitAll()
-                    .requestMatchers(HttpMethod.GET, apiEndpoint + "/invoices").permitAll()
+                    .requestMatchers(
+                            HttpMethod.GET,
+                            apiEndpoint + "/invoices",
+                            apiEndpoint + "/invoices/totals",
+                            apiEndpoint + "/invoices/report/pdf").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/paymentmethod").permitAll();
             if (devProfile) {
                 auth.requestMatchers(
@@ -59,14 +68,23 @@ public class SecurityConfig {
                 auth.requestMatchers(
                         HttpMethod.PUT,
                         apiEndpoint + "/orders/*/status").permitAll();
+                auth.requestMatchers(
+                        HttpMethod.PUT,
+                        apiEndpoint + "/orders/*/pay").permitAll();
             }
             auth.anyRequest().authenticated();
         });
 
-        if (devProfile) {
-            http.csrf(csrf -> csrf.ignoringRequestMatchers(request -> {
+        http.csrf(csrf -> csrf.ignoringRequestMatchers(request -> {
                 String method = request.getMethod();
                 String path = request.getServletPath();
+
+                boolean isCreateProduct = "POST".equals(method)
+                        && (apiEndpoint + "/products").equals(path);
+
+                boolean isModifyProduct = ("PUT".equals(method) || "DELETE".equals(method))
+                        && path.startsWith(apiEndpoint + "/products/")
+                        && path.substring((apiEndpoint + "/products/").length()).matches("[^/]+");
 
                 boolean isCreateOrder = "POST".equals(method)
                         && (apiEndpoint + "/orders").equals(path);
@@ -75,9 +93,13 @@ public class SecurityConfig {
                         && path.startsWith(apiEndpoint + "/orders/")
                         && path.endsWith("/status");
 
-                return isCreateOrder || isUpdateOrderStatus;
+                boolean isPayOrder = "PUT".equals(method)
+                        && path.startsWith(apiEndpoint + "/orders/")
+                        && path.endsWith("/pay");
+
+                return isCreateProduct || isModifyProduct
+                        || (devProfile && (isCreateOrder || isUpdateOrderStatus || isPayOrder));
             }));
-        }
         return http.build();
     }
 }

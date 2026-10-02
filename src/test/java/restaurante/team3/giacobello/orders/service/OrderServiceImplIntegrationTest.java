@@ -2,6 +2,8 @@ package restaurante.team3.giacobello.orders.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -10,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
-import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
 import restaurante.team3.giacobello.invoices.repository.InvoiceRepository;
 import restaurante.team3.giacobello.orders.entity.OrderEntity;
 import restaurante.team3.giacobello.orders.entity.OrderItemEntity;
@@ -38,8 +39,7 @@ class OrderServiceImplIntegrationTest extends IntegrationTest {
 
     @Test
     @Transactional
-
-    void createSavesOrderItemsAndInvoice() {
+    void createSavesOrderItemsWithoutInvoice() {
         deleteOrders();
         OrderCreateDTORequest request = new OrderCreateDTORequest(
                 3,
@@ -61,7 +61,6 @@ class OrderServiceImplIntegrationTest extends IntegrationTest {
 
         OrderEntity savedOrder = orderRepository.findById(response.id()).orElseThrow();
         List<OrderItemEntity> savedItems = orderItemRepository.findAll();
-        InvoiceEntity savedInvoice = invoiceRepository.findByOrderId(response.id()).orElseThrow();
 
         assertEquals(3, savedOrder.getTabletId());
         assertEquals("DINE IN", savedOrder.getOrderTypeName());
@@ -69,13 +68,11 @@ class OrderServiceImplIntegrationTest extends IntegrationTest {
         assertEquals("PENDING", savedOrder.getStatusName());
         assertEquals(new BigDecimal("33.00"), savedOrder.getTotalAmount());
         assertNotNull(savedOrder.getCreatedAt());
+        assertNull(savedOrder.getPaidAt());
 
         assertEquals(2, savedItems.size());
 
-        assertEquals(response.id(), savedInvoice.getOrderId());
-        assertEquals("INV-" + response.id(), savedInvoice.getInvoiceNumber());
-        assertEquals(new BigDecimal("33.00"), savedInvoice.getTotalAmount());
-        assertNotNull(savedInvoice.getIssuedAt());
+        assertTrue(invoiceRepository.findByOrderId(response.id()).isEmpty());
     }
 
     private void deleteOrders() {
