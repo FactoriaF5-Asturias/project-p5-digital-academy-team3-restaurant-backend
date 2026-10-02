@@ -45,50 +45,51 @@ public class SecurityConfig {
     private String endpoint;
 
     @Bean
-        public SecurityFilterChain securityFilterChain(
+    public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             AuthenticationProvider authenticationProvider) throws Exception {
         http
-            .cors(cors -> cors.configurationSource(corsConfiguration()))
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/swagger-ui/**",
-                    "/swagger-ui.html",
-                    "/v3/api-docs/**",
-                    "/webjars/**",
-                    "/images/**",
-                    "/error",
-                    endpoint + "/auth/token"
-                ).permitAll()
-                .requestMatchers(HttpMethod.GET, endpoint + "/invoices", endpoint + "/invoices/**")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, endpoint + "/orders/*/invoice")
-                    .hasAnyRole("KITCHEN", "ADMIN")
-                .requestMatchers(HttpMethod.GET, endpoint + "/orders", endpoint + "/orders/*")
-                    .hasAnyRole("KITCHEN", "ADMIN")
-                .requestMatchers(HttpMethod.PUT, endpoint + "/orders/*/status")
-                    .hasAnyRole("KITCHEN", "ADMIN")
-                .requestMatchers(HttpMethod.POST, endpoint + "/orders")
-                    .permitAll()
-                .requestMatchers(HttpMethod.POST, endpoint + "/categories", endpoint + "/products")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, endpoint + "/categories/**", endpoint + "/products/**")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, endpoint + "/categories/**", endpoint + "/products/**")
-                    .hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET,
-                        endpoint + "/categories", endpoint + "/categories/**",
-                        endpoint + "/products", endpoint + "/products/**",
-                        endpoint + "/tablets", endpoint + "/tablets/**",
-                        endpoint + "/paymentmethod")
-                    .permitAll()
-                .anyRequest().authenticated())
-            .authenticationProvider(authenticationProvider)
-            .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
-                .decoder(jwtDecoder())
-                .jwtAuthenticationConverter(jwtAuthenticationConverter())));
+                .cors(cors -> cors.configurationSource(corsConfiguration()))
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**",
+                                "/webjars/**",
+                                "/images/**",
+                                "/error",
+                                endpoint + "/auth/token",
+                                endpoint + "/auth/change-password")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.GET, endpoint + "/invoices", endpoint + "/invoices/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, endpoint + "/orders/*/invoice")
+                        .hasAnyRole("KITCHEN", "ADMIN")
+                        .requestMatchers(HttpMethod.GET, endpoint + "/orders", endpoint + "/orders/*")
+                        .hasAnyRole("KITCHEN", "ADMIN")
+                        .requestMatchers(HttpMethod.PUT, endpoint + "/orders/*/status")
+                        .hasAnyRole("KITCHEN", "ADMIN")
+                        .requestMatchers(HttpMethod.POST, endpoint + "/orders")
+                        .permitAll()
+                        .requestMatchers(HttpMethod.POST, endpoint + "/categories", endpoint + "/products")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, endpoint + "/categories/**", endpoint + "/products/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, endpoint + "/categories/**", endpoint + "/products/**")
+                        .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,
+                                endpoint + "/categories", endpoint + "/categories/**",
+                                endpoint + "/products", endpoint + "/products/**",
+                                endpoint + "/tablets", endpoint + "/tablets/**",
+                                endpoint + "/paymentmethod")
+                        .permitAll()
+                        .anyRequest().authenticated())
+                .authenticationProvider(authenticationProvider)
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt
+                        .decoder(jwtDecoder())
+                        .jwtAuthenticationConverter(jwtAuthenticationConverter())));
 
         return http.build();
     }
@@ -133,8 +134,8 @@ public class SecurityConfig {
         byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
         SecretKeySpec secretKey = new SecretKeySpec(bytes, 0, bytes.length, "HmacSHA512");
         return NimbusJwtDecoder.withSecretKey(secretKey)
-            .macAlgorithm(MacAlgorithm.HS512)
-            .build();
+                .macAlgorithm(MacAlgorithm.HS512)
+                .build();
     }
 
     @Bean
