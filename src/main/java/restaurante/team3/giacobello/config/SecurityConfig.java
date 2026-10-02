@@ -65,7 +65,8 @@ public class SecurityConfig {
                         apiEndpoint + "/orders").permitAll();
                 auth.requestMatchers(
                         HttpMethod.GET,
-                        apiEndpoint + "/orders/*/invoice").permitAll();
+                        apiEndpoint + "/orders/*/invoice",
+                        apiEndpoint + "/orders/*/invoice/pdf").permitAll();
                 auth.requestMatchers(
                         HttpMethod.PUT,
                         apiEndpoint + "/orders/*/status").permitAll();
