@@ -9,6 +9,58 @@ Antes de picar código, necesito tener preparado:
 - [X] Lógica de negocio ¿Workflow de cesta? ¿Flujo necesario para MvP?.
 - [ ] Estructura de proyecto.
 
+## Instalación y arranque
+
+### Requisitos
+
+- Docker con Docker Compose.
+- Java 21, solo si vas a arrancar la app fuera de Docker o a pasar los tests.
+
+### Variables de entorno
+
+Copia la plantilla y pon tus credenciales:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Para qué sirve |
+|---|---|
+| `DATABASE_USERNAME` | Usuario de PostgreSQL |
+| `DATABASE_PASSWORD` | Contraseña de PostgreSQL |
+| `SPRING_PROFILES_ACTIVE` | Perfil de Spring: `dev` en local |
+
+### Opción A: todo en Docker
+
+Levanta PostgreSQL y el backend:
+
+```bash
+docker compose --profile app up -d --build
+```
+
+La API queda en `http://localhost:8080/api/v1` y Swagger en `http://localhost:8080/swagger-ui/index.html`. Flyway crea las tablas y carga los datos de ejemplo al arrancar.
+
+Para pararlo: `docker compose --profile app down`.
+
+### Opción B: base de datos en Docker y backend en local
+
+Útil para desarrollar, porque la app se reinicia desde el IDE:
+
+```bash
+docker compose up -d
+env $(cat .env | xargs) ./mvnw spring-boot:run
+```
+
+Sin `--profile app`, Compose levanta solo PostgreSQL.
+
+### Tests
+
+```bash
+./mvnw clean verify
+```
+
+Los tests de integración usan Testcontainers, así que Docker tiene que estar en marcha. El informe de cobertura queda en `target/site/jacoco/index.html`.
+
 ## Dependencias
 ### Testing
 
