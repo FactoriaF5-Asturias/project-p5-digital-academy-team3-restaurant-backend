@@ -42,6 +42,8 @@ public class OrderServiceImpl implements OrderService {
             "COMPLETED",
             "DELAYED",
             "IN PROGRESS");
+    private static final Set<String> ALLOWED_ORDER_TYPE_NAMES = Set.of("DINE IN", "TAKEAWAY");
+    private static final Set<String> ALLOWED_PAYMENT_METHOD_NAMES = Set.of("CASH", "CARD");
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
     private final ProductRepository productRepository;
@@ -162,11 +164,16 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void validateRequest(OrderCreateDTORequest request) {
-        if (!"DINE IN".equals(request.orderTypeName())
-                || !"CASH".equals(request.paymentMethodName())) {
+        if (!ALLOWED_ORDER_TYPE_NAMES.contains(request.orderTypeName())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Esta versión admite DINE IN con CASH");
+                    "Tipo de pedido no admitido: usa DINE IN o TAKEAWAY");
+        }
+
+        if (!ALLOWED_PAYMENT_METHOD_NAMES.contains(request.paymentMethodName())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Método de pago no admitido: usa CASH o CARD");
         }
 
         if (request.tabletId() == null || request.tabletId() <= 0) {
