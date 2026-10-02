@@ -61,7 +61,8 @@ public class SecurityConfig {
                                                                 "/webjars/**",
                                                                 "/images/**",
                                                                 "/error",
-                                                                endpoint + "/auth/token")
+                                                                endpoint + "/auth/token",
+                                                                endpoint + "/auth/change-password")
                                                 .permitAll()
                                                 .requestMatchers(HttpMethod.GET, endpoint + "/invoices",
                                                                 endpoint + "/invoices/**")
@@ -73,10 +74,10 @@ public class SecurityConfig {
                                                 .requestMatchers(HttpMethod.GET, endpoint + "/orders",
                                                                 endpoint + "/orders/*")
                                                 .hasAnyRole("KITCHEN", "ADMIN")
-                                                .requestMatchers(HttpMethod.PUT, endpoint + "/orders/*/pay")
-                                                .hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.PUT, endpoint + "/orders/*/status")
                                                 .hasAnyRole("KITCHEN", "ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, endpoint + "/orders/*/pay")
+                                                .hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.POST, endpoint + "/orders")
                                                 .permitAll()
                                                 .requestMatchers(HttpMethod.POST, endpoint + "/categories",
@@ -138,14 +139,14 @@ public class SecurityConfig {
                 return new NimbusJwtEncoder(new ImmutableSecret<>(key.getBytes(StandardCharsets.UTF_8)));
         }
 
-        @Bean
-        public JwtDecoder jwtDecoder() {
-                byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
-                SecretKeySpec secretKey = new SecretKeySpec(bytes, 0, bytes.length, "HmacSHA512");
-                return NimbusJwtDecoder.withSecretKey(secretKey)
-                                .macAlgorithm(MacAlgorithm.HS512)
-                                .build();
-        }
+    @Bean
+    public JwtDecoder jwtDecoder() {
+        byte[] bytes = key.getBytes(StandardCharsets.UTF_8);
+        SecretKeySpec secretKey = new SecretKeySpec(bytes, 0, bytes.length, "HmacSHA512");
+        return NimbusJwtDecoder.withSecretKey(secretKey)
+                .macAlgorithm(MacAlgorithm.HS512)
+                .build();
+    }
 
         @Bean
         public CorsConfigurationSource corsConfiguration() {

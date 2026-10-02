@@ -169,6 +169,42 @@ class AuthControllerIntegrationTest extends IntegrationTest {
                 .andExpect(status().isCreated());
     }
 
+    @Test
+    void adminWithInitialPasswordMustChangePasswordBeforeReceivingToken() throws Exception {
+        String adminUsername = createUserWithRole("ADMIN", true);
+
+        login(adminUsername, PASSWORD)
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void adminCanChangeRequiredPasswordOnceAndThenLogInNormally() throws Exception {
+        String adminUsername = createUserWithRole("ADMIN", true);
+        String newPassword = "new-correct-password";
+
+        MvcResult result = mockMvc.perform(post("/api/v1/auth/change-password")
+                        .contentType("application/json")
+                        .content(changePasswordJson(adminUsername, PASSWORD, newPassword)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andReturn();
+
+        String token = extractToken(result);
+        org.junit.jupiter.api.Assertions.assertEquals(
+                List.of("ADMIN"), jwtDecoder.decode(token).getClaimAsStringList("roles"));
+
+        login(adminUsername, PASSWORD)
+                .andExpect(status().isUnauthorized());
+
+        login(adminUsername, newPassword)
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/auth/change-password")
+                        .contentType("application/json")
+                        .content(changePasswordJson(adminUsername, newPassword, "another-password")))
+                .andExpect(status().isConflict());
+    }
+
         @Test
         void kitchenRoleCannotModifyProducts() throws Exception {
                 String token = extractToken(login(PASSWORD).andReturn());
@@ -232,12 +268,17 @@ class AuthControllerIntegrationTest extends IntegrationTest {
     }
 
     private String createUserWithRole(String role) {
+        return createUserWithRole(role, false);
+    }
+
+    private String createUserWithRole(String role, boolean mustChangePassword) {
         String newUsername = "auth-test-" + UUID.randomUUID();
         Integer userId = jdbcTemplate.queryForObject(
-                "INSERT INTO users_auth (username, password_hash) VALUES (?, ?) RETURNING id",
+                "INSERT INTO users_auth (username, password_hash, must_change_password) VALUES (?, ?, ?) RETURNING id",
                 Integer.class,
                 newUsername,
-                passwordEncoder.encode(PASSWORD));
+                passwordEncoder.encode(PASSWORD),
+                mustChangePassword);
         jdbcTemplate.update(
                 "INSERT INTO users_details (user_id, email, role_id) "
                         + "SELECT ?, ?, id FROM users_role WHERE name = ?",
@@ -252,6 +293,13 @@ class AuthControllerIntegrationTest extends IntegrationTest {
     }
 
     private record LoginPayload(String username, String password) {
+    }
+
+    private String changePasswordJson(String user, String currentPassword, String newPassword) throws Exception {
+        return objectMapper.writeValueAsString(new ChangePasswordPayload(user, currentPassword, newPassword));
+    }
+
+    private record ChangePasswordPayload(String username, String currentPassword, String newPassword) {
     }
 
     private String extractToken(MvcResult result) throws Exception {

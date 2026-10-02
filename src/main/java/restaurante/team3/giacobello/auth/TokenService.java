@@ -3,7 +3,6 @@ package restaurante.team3.giacobello.auth;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,7 +13,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
-@Service 
+@Service
 public class TokenService {
     private final JwtEncoder jwtEncoder;
 
@@ -26,19 +25,19 @@ public class TokenService {
         Instant now = Instant.now();
 
         List<String> roles = authentication.getAuthorities().stream()
-            .map(GrantedAuthority::getAuthority)
-            .filter(authority -> authority.startsWith("ROLE_"))
-            .map(authority -> authority.substring("ROLE_".length()))
-            .toList();
+                .map(GrantedAuthority::getAuthority)
+                .filter(authority -> authority.startsWith("ROLE_"))
+                .map(authority -> authority.substring("ROLE_".length()))
+                .toList();
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
-            .issuer("self")
-            .issuedAt(now)
-            .subject(authentication.getName())
-            .expiresAt(now.plus(1, ChronoUnit.HOURS))
-            .claim("roles", roles)
-            .build();
-        
+                .issuer("self")
+                .issuedAt(now)
+                .subject(authentication.getName())
+                .expiresAt(now.plus(1, ChronoUnit.HOURS))
+                .claim("roles", roles)
+                .build();
+
         var encoderParameters = JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS512).build(), claims);
         return this.jwtEncoder.encode(encoderParameters).getTokenValue();
     }

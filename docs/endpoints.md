@@ -8,7 +8,8 @@ Method - Endpoint - Envia - Recibe
 
 | Hecho | Method | Endpoint                      | Da                                                                 | Recibe                                            | Errores       |
 | ----- | ------ | ----------------------------- | ------------------------------------------------------------------ | ------------------------------------------------- | ------------- |
-| [X]   | POST   | `/api/v1/auth/token`           | `username`, `password`                                             | Token JWT                                        | 400, 401      |
+| [X]   | POST   | `/api/v1/auth/token`           | `username`, `password`                                             | Token JWT                                        | 400, 401, 409 |
+| [X]   | POST   | `/api/v1/auth/change-password` | `username`, `currentPassword`, `newPassword`                       | Token JWT                                        | 400, 401, 409 |
 | [X]   | GET    | `/api/products`               | ---                                                                | Lista de productos activos                        | 500           |
 | [X]   | GET    | `/api/products/{id}`          | `id` del producto                                                  | Producto                                          | 404, 400      |
 | [X]   | POST   | `/api/products`               | `name`, `description`, `categoryId`, `price`, `imageURL`, `status` | Producto creado                                   | 400, 404, 409 |
@@ -63,6 +64,42 @@ http://localhost:8080/api/v1/auth/token
 
 Si el usuario o la contraseña no son válidos, responde **401 Unauthorized**. Los
 campos vacíos responden **400 Bad Request**. No requiere autenticación previa.
+
+#### POST /api/v1/auth/change-password
+
+Este endpoint se usa solo cuando una cuenta tiene pendiente cambiar su
+contraseña inicial. Antes de usarlo, `POST /api/v1/auth/token` debe responder
+**409 Conflict** para esa cuenta.
+
+1. En Postman seleccionar método **POST** y esta URL:
+
+```text
+http://localhost:8080/api/v1/auth/change-password
+```
+
+2. En **Headers**, añadir `Content-Type: application/json`.
+3. En **Body**, seleccionar **raw** y **JSON**, y enviar:
+
+```json
+{
+  "username": "Admin",
+  "currentPassword": "contraseña-actual",
+  "newPassword": "nueva-contraseña"
+}
+```
+
+4. Si el cambio es correcto, responde **200 OK** y devuelve un token JWT:
+
+```json
+{
+  "token": "eyJ..."
+}
+```
+
+Si la contraseña actual no es correcta, responde **401 Unauthorized**. Si la
+nueva contraseña no cumple la validación o es igual a la anterior, responde
+**400 Bad Request**. Si la cuenta ya no tiene pendiente el cambio inicial,
+responde **409 Conflict** y debe iniciar sesión en `POST /api/v1/auth/token`.
 
 ### Probar peticiones de pedidos
 
