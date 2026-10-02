@@ -43,13 +43,37 @@ public class AuthController {
 
     @PostMapping("/token")
     public TokenResponse token(@Valid @RequestBody LoginRequest request) {
-        Authentication authentication;
-        try {
-            authentication = authenticationManager.authenticate(
-                    UsernamePasswordAuthenticationToken.unauthenticated(request.username(), request.password()));
-        } catch (AuthenticationException exception) {
+        Authentication authentication = authenticate(request.username(), request.password());
+        UserAuthEntity user = findUser(authentication.getName());
+
+        if (user.isMustChangePassword()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Password change required");
+        }
+
+        return new TokenResponse(tokenService.generateToken(authentication));
+    }
+
+    @PostMapping("/change-password")
+    public TokenResponse changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        UserAuthEntity user = findUser(request.username());
+
+        if (!user.isMustChangePassword()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Password change is not required");
+        }
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
         }
+
+        if (passwordEncoder.matches(request.newPassword(), user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "New password must be different");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        user.setMustChangePassword(false);
+        userAuthRepository.save(user);
+
+        Authentication authentication = authenticate(request.username(), request.newPassword());
         return new TokenResponse(tokenService.generateToken(authentication));
     }
 
