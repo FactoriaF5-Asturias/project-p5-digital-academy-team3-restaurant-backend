@@ -1,5 +1,7 @@
 package restaurante.team3.giacobello.product.controller;
 
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -14,6 +16,10 @@ import restaurante.team3.giacobello.product.entity.ProductEntity;
 import restaurante.team3.giacobello.product.repository.ProductRepository;
 
 class ProductControllerIntegrationTest extends IntegrationTest {
+
+    private static final String SUPABASE_IMAGES =
+            "https://humjxfnaqjxirkknngvf.supabase.co/storage/v1/object/public/images/";
+
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,7 +53,14 @@ class ProductControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$[0].category").value("Bebidas"))
                 .andExpect(jsonPath("$[0].price").value(60.0))
                 .andExpect(jsonPath("$[0].status").value(true))
-                .andExpect(jsonPath("$[0].imageUrl").value("/images/products/Acqua_di_localhost.jpg"));
+                .andExpect(jsonPath("$[0].imageUrl").value(SUPABASE_IMAGES + "Acqua_di_localhost.jpg"));
+    }
+
+    @Test
+    void findAllServesEveryProductImageFromSupabase() throws Exception {
+        mockMvc.perform(get("/api/v1/products"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].imageUrl", everyItem(startsWith(SUPABASE_IMAGES))));
     }
 
     @Autowired
