@@ -8,6 +8,8 @@ import restaurante.team3.giacobello.product.dtos.ProductDTOResponse;
 public interface ProductService {
     List<ProductDTOResponse> findAll();
 
+    List<ProductDTOResponse> findAllIncludingInactive();
+
     ProductDTOResponse create(ProductDTORequest request);
 
     ProductDTOResponse update(Integer id, ProductDTORequest request);

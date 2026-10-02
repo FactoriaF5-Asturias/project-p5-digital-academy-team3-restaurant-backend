@@ -8,6 +8,7 @@ Method - Endpoint - Envia - Recibe
 
 | Hecho | Method | Endpoint                         | Da                                                                 | Recibe                                            | Errores       |
 | ----- | ------ | -------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------- | ------------- |
+| [X]   | GET    | `/api/v1/admin/products`         | ---                                                                | Lista de todos los productos (activos e inactivos) | 401, 403, 500 |
 | [X]   | GET    | `/api/v1/products`               | ---                                                                | Lista de productos activos                        | 500           |
 | [X]   | GET    | `/api/v1/products/{id}`          | `id` del producto                                                  | Producto                                          | 404, 400      |
 | [X]   | POST   | `/api/v1/products`               | `name`, `description`, `categoryId`, `price`, `imageURL`, `status` | Producto creado                                   | 400, 404, 409 |

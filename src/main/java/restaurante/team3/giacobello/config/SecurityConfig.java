@@ -42,6 +42,7 @@ public class SecurityConfig {
             auth
                     .requestMatchers("/images/**", "/error").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/products").permitAll()
+                    .requestMatchers(HttpMethod.GET, apiEndpoint + "/admin/products").permitAll()
                     .requestMatchers(HttpMethod.GET, apiEndpoint + "/products/*").permitAll()
                     .requestMatchers(HttpMethod.POST, apiEndpoint + "/products").permitAll()
                     .requestMatchers(HttpMethod.PUT, apiEndpoint + "/products/*").permitAll()
