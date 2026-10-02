@@ -122,29 +122,32 @@ class InvoiceServiceImplTest {
     }
 
     @Test
-    void shouldSumSalesOfDayMonthQuarterAndYearOfGivenDate() {
+    void shouldSumSalesAndCountOrdersOfDayMonthQuarterAndYearOfGivenDate() {
         LocalDate date = LocalDate.of(2026, 8, 15);
-        when(invoiceRepository.sumTotalAmountByIssuedAtBetween(
-                LocalDateTime.of(2026, 8, 15, 0, 0),
-                LocalDateTime.of(LocalDate.of(2026, 8, 15), LocalTime.MAX)))
-                .thenReturn(new BigDecimal("20.00"));
-        when(invoiceRepository.sumTotalAmountByIssuedAtBetween(
-                LocalDateTime.of(2026, 8, 1, 0, 0),
-                LocalDateTime.of(LocalDate.of(2026, 8, 31), LocalTime.MAX)))
-                .thenReturn(new BigDecimal("140.00"));
-        when(invoiceRepository.sumTotalAmountByIssuedAtBetween(
-                LocalDateTime.of(2026, 7, 1, 0, 0),
-                LocalDateTime.of(LocalDate.of(2026, 9, 30), LocalTime.MAX)))
-                .thenReturn(new BigDecimal("380.00"));
-        when(invoiceRepository.sumTotalAmountByIssuedAtBetween(
-                LocalDateTime.of(2026, 1, 1, 0, 0),
-                LocalDateTime.of(LocalDate.of(2026, 12, 31), LocalTime.MAX)))
-                .thenReturn(new BigDecimal("1200.00"));
+        stubPeriod(LocalDate.of(2026, 8, 15), LocalDate.of(2026, 8, 15), "20.00", 1);
+        stubPeriod(LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 31), "140.00", 7);
+        stubPeriod(LocalDate.of(2026, 7, 1), LocalDate.of(2026, 9, 30), "380.00", 19);
+        stubPeriod(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31), "1200.00", 60);
+
         SalesTotalsDTOResponse result = invoiceService.findSalesTotals(date);
+
         assertEquals(new SalesTotalsDTOResponse(
                 new BigDecimal("20.00"),
                 new BigDecimal("140.00"),
                 new BigDecimal("380.00"),
-                new BigDecimal("1200.00")), result);
+                new BigDecimal("1200.00"),
+                1,
+                7,
+                19,
+                60), result);
+    }
+
+    private void stubPeriod(LocalDate from, LocalDate to, String sales, long orders) {
+        LocalDateTime start = from.atStartOfDay();
+        LocalDateTime end = to.atTime(LocalTime.MAX);
+        when(invoiceRepository.sumTotalAmountByIssuedAtBetween(start, end))
+                .thenReturn(new BigDecimal(sales));
+        when(invoiceRepository.countByIssuedAtBetween(start, end))
+                .thenReturn(orders);
     }
 }
