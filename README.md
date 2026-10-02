@@ -29,6 +29,14 @@ cp .env.example .env
 | `DATABASE_USERNAME` | Usuario de PostgreSQL |
 | `DATABASE_PASSWORD` | Contraseña de PostgreSQL |
 | `SPRING_PROFILES_ACTIVE` | Perfil de Spring: `dev` en local |
+| `SUPABASE_URL` | URL del proyecto de Supabase. Opcional |
+| `SUPABASE_SERVICE_KEY` | Clave `service_role` de Supabase. Opcional |
+
+### Resumen de ventas automático
+
+Con `SUPABASE_URL` y `SUPABASE_SERVICE_KEY` rellenas, el backend genera cada noche a las 00:05 (hora de Madrid) el PDF de ventas del día anterior y lo sube al bucket `sales-reports` de Supabase Storage como `daily/sales-report-AAAA-MM-DD.pdf`. El bucket tiene que existir y ser privado. Si las variables están vacías, la tarea no se activa y el resto de la app funciona igual. Si rellenas `SUPABASE_URL` pero no la clave, la app no arranca: rellena las dos o ninguna. Si una noche falla la subida, queda en el log como `No se pudo archivar el resumen de ventas` y no se reintenta.
+
+La hora se cambia con `SALES_REPORT_ARCHIVE_CRON` (expresión cron de Spring) y el bucket con `SUPABASE_REPORTS_BUCKET`.
 
 ### Opción A: todo en Docker
 
