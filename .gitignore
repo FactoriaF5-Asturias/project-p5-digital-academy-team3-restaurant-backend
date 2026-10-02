@@ -33,6 +33,7 @@ build/
 .vscode/
 .env
 .temp
+node_modules/
 
 ### Documentos a ignorar ###
 *db-docu.md
