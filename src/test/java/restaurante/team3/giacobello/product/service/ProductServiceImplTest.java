@@ -75,6 +75,27 @@ class ProductServiceImplTest {
         }
 
         @Test
+        void findAllIncludingInactiveReturnsAllProductsMappedToDto() {
+                ProductEntity activeProduct = new ProductEntity();
+                ProductEntity inactiveProduct = new ProductEntity();
+                ProductDTOResponse activeDto = new ProductDTOResponse(
+                                1, "Pizza", "Rica", "Especialidades", new BigDecimal("10.00"), true, "/img.jpg");
+                ProductDTOResponse inactiveDto = new ProductDTOResponse(
+                                2, "Old Pizza", "Retirada", "Especialidades", new BigDecimal("8.00"), false,
+                                "/old.jpg");
+
+                when(productRepository.findAll(Sort.by("name").ascending()))
+                                .thenReturn(List.of(activeProduct, inactiveProduct));
+                when(productMapper.toDto(activeProduct)).thenReturn(activeDto);
+                when(productMapper.toDto(inactiveProduct)).thenReturn(inactiveDto);
+
+                List<ProductDTOResponse> result = service.findAllIncludingInactive();
+
+                assertEquals(List.of(activeDto, inactiveDto), result);
+                verify(productRepository).findAll(Sort.by("name").ascending());
+        }
+
+        @Test
         void findByIdReturnsProductMappedToDto() {
                 ProductEntity entity = new ProductEntity();
                 ProductDTOResponse dto = new ProductDTOResponse(

@@ -1,5 +1,16 @@
 package restaurante.team3.giacobello.orders.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+
+import java.io.IOException;
+
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.springframework.http.HttpHeaders;
+import org.springframework.test.web.servlet.MvcResult;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -15,14 +26,18 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
+
+import com.jayway.jsonpath.JsonPath;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
 import restaurante.team3.giacobello.infrastructure.IntegrationTest;
 import restaurante.team3.giacobello.orders.entity.OrderEntity;
 import restaurante.team3.giacobello.orders.repository.OrderItemRepository;
 import restaurante.team3.giacobello.orders.repository.OrderRepository;
+import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
 import restaurante.team3.giacobello.invoices.repository.InvoiceRepository;
 
 @ActiveProfiles({ "test", "dev" })
@@ -62,6 +77,19 @@ class OrderControllerIntegrationTest extends IntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(order.getId()))
                 .andExpect(jsonPath("$.statusName").value("ACCEPTED"));
+    }
+
+    @Test
+    @Transactional
+    void findByIdReturnsPaidAtWhenOrderIsPaid() throws Exception {
+        deleteOrders();
+        OrderEntity order = saveOrder("COMPLETED");
+        order.setPaidAt(LocalDateTime.of(2026, 9, 28, 13, 15));
+        orderRepository.saveAndFlush(order);
+
+        mockMvc.perform(get("/api/v1/orders/{id}", order.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.paidAt").value("2026-09-28T13:15:00"));
     }
 
     @Test
@@ -133,6 +161,136 @@ class OrderControllerIntegrationTest extends IntegrationTest {
                 .content(requestBody))
                 .andExpect(status().isConflict());
                 }
+    @Test
+    @Transactional
+    void payMarksOrderAsPaidAndIssuesItsInvoice() throws Exception {
+        deleteOrders();
+        OrderEntity order = saveOrder("COMPLETED");
+
+        mockMvc.perform(payRequest(order.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(order.getId()))
+                .andExpect(jsonPath("$.statusName").value("COMPLETED"))
+                .andExpect(jsonPath("$.paidAt").isNotEmpty());
+
+        InvoiceEntity invoice = invoiceRepository.findByOrderId(order.getId()).orElseThrow();
+        assertEquals("INV-" + order.getId(), invoice.getInvoiceNumber());
+        assertEquals(new BigDecimal("120.00"), invoice.getTotalAmount());
+    }
+
+    @Test
+    @Transactional
+    void payReturnsConflictWhenOrderIsAlreadyPaid() throws Exception {
+        deleteOrders();
+        OrderEntity order = saveOrder("COMPLETED");
+
+        mockMvc.perform(payRequest(order.getId()))
+                .andExpect(status().isOk());
+        mockMvc.perform(payRequest(order.getId()))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @Transactional
+    void payReturnsNotFoundWhenOrderDoesNotExist() throws Exception {
+        deleteOrders();
+
+        mockMvc.perform(payRequest(999999))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @Transactional
+    void invoicesListOnlyPaidOrders() throws Exception {
+        deleteOrders();
+        String createdOrder = mockMvc.perform(post("/api/v1/orders")
+                .servletPath("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "tabletId": 3,
+                          "orderTypeName": "DINE IN",
+                          "paymentMethodName": "CASH",
+                          "items": [ { "productId": 1, "quantity": 1 } ]
+                        }
+                        """))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Integer orderId = JsonPath.read(createdOrder, "$.id");
+
+        mockMvc.perform(get("/api/v1/invoices"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(payRequest(orderId))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/invoices"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].orderId").value(orderId));
+    }
+
+    @Test
+    @Transactional
+    void invoicePdfReturnsThePdfOfAPaidOrder() throws Exception {
+        deleteOrders();
+        String createdOrder = mockMvc.perform(post("/api/v1/orders")
+                .servletPath("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "tabletId": 3,
+                          "orderTypeName": "DINE IN",
+                          "paymentMethodName": "CASH",
+                          "items": [ { "productId": 1, "quantity": 2 } ]
+                        }
+                        """))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Integer orderId = JsonPath.read(createdOrder, "$.id");
+        String productName = JsonPath.read(createdOrder, "$.items[0].productName");
+        mockMvc.perform(payRequest(orderId)).andExpect(status().isOk());
+
+        MvcResult result = mockMvc.perform(get("/api/v1/orders/{id}/invoice/pdf", orderId))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(header().string(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"factura-pedido-" + orderId + ".pdf\""))
+                .andReturn();
+
+        String text = extractText(result.getResponse().getContentAsByteArray());
+        assertTrue(text.contains("Factura: INV-" + orderId));
+        assertTrue(text.contains(productName));
+    }
+
+    @Test
+    @Transactional
+    void invoicePdfReturnsNotFoundWhenOrderHasNoInvoice() throws Exception {
+        deleteOrders();
+        OrderEntity order = saveOrder("PENDING");
+
+        mockMvc.perform(get("/api/v1/orders/{id}/invoice/pdf", order.getId()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void invoicePdfReturnsNotFoundWhenOrderDoesNotExist() throws Exception {
+        mockMvc.perform(get("/api/v1/orders/{id}/invoice/pdf", 999999))
+                .andExpect(status().isNotFound());
+    }
+
+    private String extractText(byte[] pdf) throws IOException {
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            return new PDFTextStripper().getText(document);
+        }
+    }
+
+    private MockHttpServletRequestBuilder payRequest(Integer id) {
+        return put("/api/v1/orders/{id}/pay", id)
+                .servletPath("/api/v1/orders/" + id + "/pay");
+    }
 
     private OrderEntity saveOrder(String statusName) {
         OrderEntity order = new OrderEntity(

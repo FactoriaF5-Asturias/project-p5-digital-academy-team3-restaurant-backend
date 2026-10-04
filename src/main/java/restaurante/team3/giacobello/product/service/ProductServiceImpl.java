@@ -43,6 +43,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ProductDTOResponse> findAllIncludingInactive() {
+        return productRepository.findAll(Sort.by("name").ascending())
+                .stream()
+                .map(productMapper::toDto)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public ProductDTOResponse create(ProductDTORequest request) {
 
