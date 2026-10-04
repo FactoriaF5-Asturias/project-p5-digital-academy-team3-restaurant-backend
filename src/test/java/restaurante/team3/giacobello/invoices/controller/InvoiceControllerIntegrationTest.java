@@ -41,13 +41,18 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
     private InvoiceRepository invoiceRepository;
 
     @Test
-    void findAllReturnsOkAndListOfInvoices() throws Exception {
-        mockMvc.perform(get("/api/v1/invoices"))
+    void adminCanFindAllInvoices() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices")
+            .header("Authorization", "Bearer " + tokenForRole("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
 
     @Test
+    void clientCannotFindAllInvoices() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices")
+                .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
+                .andExpect(status().isForbidden());
     @Transactional
     void findAllWithDateRangeReturnsOnlyInvoicesIssuedInsideRange() throws Exception {
         saveInvoice("INV-SEP", LocalDateTime.of(2026, 9, 30, 23, 45));

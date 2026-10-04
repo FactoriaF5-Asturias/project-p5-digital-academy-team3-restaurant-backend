@@ -20,7 +20,8 @@ class ProductControllerIntegrationTest extends IntegrationTest {
 
     @Test
     void findAllReturnsOkAndListOfProducts() throws Exception {
-        mockMvc.perform(get("/api/v1/products"))
+        mockMvc.perform(get("/api/v1/products")
+            .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isNotEmpty());
@@ -28,7 +29,8 @@ class ProductControllerIntegrationTest extends IntegrationTest {
 
     @Test
     void findAllReturnsProductsSortedByName() throws Exception {
-        mockMvc.perform(get("/api/v1/products"))
+        mockMvc.perform(get("/api/v1/products")
+            .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Acqua di localhost"))
                 .andExpect(jsonPath("$[1].name").value("AI a la Carte"))
@@ -38,7 +40,8 @@ class ProductControllerIntegrationTest extends IntegrationTest {
 
     @Test
     void findAllReturnsAllFieldsOfProduct() throws Exception {
-        mockMvc.perform(get("/api/v1/products"))
+        mockMvc.perform(get("/api/v1/products")
+            .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(10))
                 .andExpect(jsonPath("$[0].name").value("Acqua di localhost"))
@@ -58,7 +61,8 @@ class ProductControllerIntegrationTest extends IntegrationTest {
     void findAllReturnsEmptyListWhenNoProducts() throws Exception {
         productRepository.deleteAll();
 
-        mockMvc.perform(get("/api/v1/products"))
+        mockMvc.perform(get("/api/v1/products")
+            .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
@@ -71,7 +75,8 @@ class ProductControllerIntegrationTest extends IntegrationTest {
         acqua.setStatus(false);
         productRepository.saveAndFlush(acqua);
 
-        mockMvc.perform(get("/api/v1/products"))
+        mockMvc.perform(get("/api/v1/products")
+            .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(11))
                 .andExpect(jsonPath("$[0].name").value("AI a la Carte"));
@@ -85,7 +90,8 @@ class ProductControllerIntegrationTest extends IntegrationTest {
 
     @Test
     void findByIdReturnsNotFoundWhenProductDoesNotExist() throws Exception {
-        mockMvc.perform(get("/api/v1/products/100"))
+        mockMvc.perform(get("/api/v1/products/100")
+            .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value("Product not found with id : 100"));

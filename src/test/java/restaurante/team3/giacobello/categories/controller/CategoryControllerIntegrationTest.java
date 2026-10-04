@@ -17,7 +17,8 @@ class CategoryControllerIntegrationTest extends IntegrationTest {
 
     @Test
     void findByIdReturnsNotFoundWhenCategoryDoesNotExist() throws Exception {
-        mockMvc.perform(get("/api/v1/categories/100"))
+        mockMvc.perform(get("/api/v1/categories/100")
+            .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value("Category not found with id : 100"));
