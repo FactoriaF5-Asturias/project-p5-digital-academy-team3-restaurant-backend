@@ -18,7 +18,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -157,6 +156,7 @@ public class SecurityConfig {
                 configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
                 configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE"));
                 configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "Accept", "Origin"));
+                configuration.setExposedHeaders(Arrays.asList(HttpHeaders.CONTENT_DISPOSITION));
 
                 UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
                 source.registerCorsConfiguration("/**", configuration);
