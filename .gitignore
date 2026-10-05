@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+.env
+.temp
+node_modules/
+
+### Documentos a ignorar ###
+*db-docu.md
+*docker-arranque-testcontainer.md
+historias_usuario/

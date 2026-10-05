@@ -1,4 +1,4 @@
-package restaurante.team3.Giacobello;
+package restaurante.team3.giacobello;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

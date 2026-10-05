@@ -1,0 +1,20 @@
+package restaurante.team3.giacobello.product.service;
+
+import java.util.List;
+
+import restaurante.team3.giacobello.product.dtos.ProductDTORequest;
+import restaurante.team3.giacobello.product.dtos.ProductDTOResponse;
+
+public interface ProductService {
+    List<ProductDTOResponse> findAll();
+
+    List<ProductDTOResponse> findAllIncludingInactive();
+
+    ProductDTOResponse create(ProductDTORequest request);
+
+    ProductDTOResponse update(Integer id, ProductDTORequest request);
+
+    void delete(Integer id);
+
+    ProductDTOResponse findById(Integer id);
+}
