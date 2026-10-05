@@ -1,9 +1,6 @@
 package restaurante.team3.giacobello.orders.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -34,7 +31,6 @@ import restaurante.team3.giacobello.tablets.repository.TabletRepository;
 @Service
 public class OrderServiceImpl implements OrderService {
 
-    private static final BigDecimal MAX_TOTAL = new BigDecimal("99999999.99");
     private static final Set<String> ALLOWED_STATUS_NAMES = Set.of(
             "PENDING",
             "CANCELLED",
@@ -50,6 +46,7 @@ public class OrderServiceImpl implements OrderService {
     private final TabletRepository tabletRepository;
     private final OrderItemRepository orderItemRepository;
     private final InvoiceRepository invoiceRepository;
+    private final OrderTotalCalculator orderTotalCalculator;
 
     public OrderServiceImpl(
             OrderRepository orderRepository,
@@ -57,13 +54,15 @@ public class OrderServiceImpl implements OrderService {
             ProductRepository productRepository,
             TabletRepository tabletRepository,
             OrderItemRepository orderItemRepository,
-            InvoiceRepository invoiceRepository) {
+            InvoiceRepository invoiceRepository,
+            OrderTotalCalculator orderTotalCalculator) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.productRepository = productRepository;
         this.tabletRepository = tabletRepository;
         this.orderItemRepository = orderItemRepository;
         this.invoiceRepository = invoiceRepository;
+        this.orderTotalCalculator = orderTotalCalculator;
     }
 
     @Override
@@ -109,53 +108,19 @@ public class OrderServiceImpl implements OrderService {
         order.setStatusName("PENDING");
         order.setCreatedAt(LocalDateTime.now());
 
-        List<OrderItemEntity> lines = new ArrayList<>();
-        BigDecimal total = new BigDecimal("0.00");
+        OrderPricing pricing = orderTotalCalculator.calculate(request.items(), products);
 
-        for (OrderItemCreateDTORequest item : request.items()) {
-            ProductEntity product = products.get(item.productId());
+        List<OrderItemEntity> lines = pricing.lines()
+                .stream()
+                .map(line -> new OrderItemEntity(
+                        order,
+                        line.product(),
+                        line.quantity(),
+                        line.unitPrice(),
+                        line.subtotal()))
+                .toList();
 
-            if (product == null) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "No existe el producto " + item.productId());
-            }
-
-            if (!Boolean.TRUE.equals(product.getStatus())) {
-                throw new ResponseStatusException(
-                        HttpStatus.CONFLICT,
-                        "El producto " + product.getId()
-                                + " no está disponible");
-            }
-
-            BigDecimal unitPrice = product.getPrice();
-
-            if (unitPrice == null || unitPrice.signum() < 0) {
-                throw new ResponseStatusException(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "No se pudo calcular el importe del pedido");
-            }
-
-            BigDecimal subtotal = unitPrice.multiply(
-                    BigDecimal.valueOf(item.quantity()));
-
-            total = total.add(subtotal);
-
-            if (total.compareTo(MAX_TOTAL) > 0) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "El importe supera el máximo permitido");
-            }
-
-            lines.add(new OrderItemEntity(
-                    order,
-                    product,
-                    item.quantity(),
-                    unitPrice,
-                    subtotal));
-        }
-
-        order.setTotalAmount(total);
+        order.setTotalAmount(pricing.total());
 
         OrderEntity savedOrder = orderRepository.save(order);
         orderItemRepository.saveAll(lines);
@@ -188,31 +153,7 @@ public class OrderServiceImpl implements OrderService {
                     "La mesa no existe");
         }
 
-        if (request.items() == null || request.items().isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "El pedido debe contener productos");
-        }
-
-        var seenProducts = new HashSet<Integer>();
-
-        for (OrderItemCreateDTORequest item : request.items()) {
-            if (item == null
-                    || item.productId() == null
-                    || item.productId() <= 0
-                    || item.quantity() == null
-                    || item.quantity() <= 0) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "Producto o cantidad inválidos");
-            }
-
-            if (!seenProducts.add(item.productId())) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "No se puede repetir un producto; aumenta su cantidad");
-            }
-        }
+        orderTotalCalculator.validateItems(request.items());
     }
 
     @Override
