@@ -13,6 +13,7 @@ import restaurante.team3.giacobello.categories.exceptions.CategoryAlreadyExistsE
 import restaurante.team3.giacobello.categories.exceptions.CategoryHasProductsException;
 import restaurante.team3.giacobello.categories.exceptions.CategoryNotFoundException;
 import restaurante.team3.giacobello.payments.exceptions.PaymentGatewayException;
+import restaurante.team3.giacobello.payments.exceptions.PaymentNotFoundException;
 import restaurante.team3.giacobello.payments.exceptions.PaymentsNotConfiguredException;
 import restaurante.team3.giacobello.product.exceptions.ProductAlreadyExistsException;
 import restaurante.team3.giacobello.product.exceptions.ProductNotFoundException;
@@ -94,6 +95,18 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now());
 
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
+    }
+
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentNotFound(PaymentNotFoundException ex) {
+
+        ApiErrorResponse body = new ApiErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                ex.getMessage(),
+                LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
     @ExceptionHandler(PaymentGatewayException.class)

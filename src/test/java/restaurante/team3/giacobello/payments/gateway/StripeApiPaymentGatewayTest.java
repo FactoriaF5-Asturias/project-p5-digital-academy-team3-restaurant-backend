@@ -17,6 +17,7 @@ import com.stripe.StripeClient;
 import com.sun.net.httpserver.HttpServer;
 
 import restaurante.team3.giacobello.payments.exceptions.PaymentGatewayException;
+import restaurante.team3.giacobello.payments.exceptions.PaymentNotFoundException;
 
 class StripeApiPaymentGatewayTest {
 
@@ -90,9 +91,16 @@ class StripeApiPaymentGatewayTest {
     }
 
     @Test
-    void retrievePaymentIntentWrapsStripeErrors() {
+    void retrievePaymentIntentMapsUnknownIntentsToNotFound() {
         respond(404, "{\"error\":{\"type\":\"invalid_request_error\",\"code\":\"resource_missing\","
                 + "\"message\":\"No such payment_intent\"}}");
+
+        assertThrows(PaymentNotFoundException.class, () -> gateway.retrievePaymentIntent("pi_x"));
+    }
+
+    @Test
+    void retrievePaymentIntentWrapsStripeApiErrors() {
+        respond(500, "{\"error\":{\"type\":\"api_error\",\"message\":\"boom\"}}");
 
         assertThrows(PaymentGatewayException.class, () -> gateway.retrievePaymentIntent("pi_x"));
     }

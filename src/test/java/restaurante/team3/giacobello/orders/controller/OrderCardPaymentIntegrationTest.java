@@ -28,6 +28,8 @@ import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
 import restaurante.team3.giacobello.invoices.repository.InvoiceRepository;
 import restaurante.team3.giacobello.orders.entity.OrderEntity;
 import restaurante.team3.giacobello.orders.repository.OrderRepository;
+import restaurante.team3.giacobello.payments.exceptions.PaymentGatewayException;
+import restaurante.team3.giacobello.payments.exceptions.PaymentNotFoundException;
 import restaurante.team3.giacobello.payments.exceptions.PaymentsNotConfiguredException;
 import restaurante.team3.giacobello.payments.gateway.PaymentIntentDetails;
 import restaurante.team3.giacobello.payments.gateway.StripePaymentGateway;
@@ -114,6 +116,32 @@ class OrderCardPaymentIntegrationTest extends IntegrationTest {
                 .thenReturn(new PaymentIntentDetails("pi_low", "succeeded", 100, "eur"));
 
         placeOrder(body("CARD", "pi_low")).andExpect(status().isConflict());
+    }
+
+    @Test
+    @Transactional
+    void unknownPaymentIntentIsRejectedWithBadRequest() throws Exception {
+        when(paymentGateway.retrievePaymentIntent("pi_ghost")).thenThrow(new PaymentNotFoundException());
+
+        placeOrder(body("CARD", "pi_ghost"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("El pago no existe"));
+    }
+
+    @Test
+    @Transactional
+    void malformedPaymentIntentIdIsRejected() throws Exception {
+        placeOrder(body("CARD", "not-an-intent")).andExpect(status().isBadRequest());
+        placeOrder(body("CARD", "pi_" + "a".repeat(256))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @Transactional
+    void gatewayFailureWhileCreatingTheOrderAnswers502() throws Exception {
+        when(paymentGateway.retrievePaymentIntent("pi_down"))
+                .thenThrow(new PaymentGatewayException(new RuntimeException("boom")));
+
+        placeOrder(body("CARD", "pi_down")).andExpect(status().isBadGateway());
     }
 
     @Test

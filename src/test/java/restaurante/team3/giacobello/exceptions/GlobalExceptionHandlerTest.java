@@ -17,6 +17,7 @@ import restaurante.team3.giacobello.categories.exceptions.CategoryAlreadyExistsE
 import restaurante.team3.giacobello.categories.exceptions.CategoryHasProductsException;
 import restaurante.team3.giacobello.categories.exceptions.CategoryNotFoundException;
 import restaurante.team3.giacobello.payments.exceptions.PaymentGatewayException;
+import restaurante.team3.giacobello.payments.exceptions.PaymentNotFoundException;
 import restaurante.team3.giacobello.payments.exceptions.PaymentsNotConfiguredException;
 import restaurante.team3.giacobello.product.exceptions.ProductAlreadyExistsException;
 import restaurante.team3.giacobello.product.exceptions.ProductNotFoundException;
@@ -40,6 +41,7 @@ class GlobalExceptionHandlerTest {
             "product-not-found, 404, Not Found, No existe el producto",
             "product-already-exists, 409, Conflict, El producto ya existe",
             "payments-not-configured, 503, Service Unavailable, Los pagos con tarjeta no están disponibles",
+            "payment-not-found, 400, Bad Request, El pago no existe",
             "payment-gateway, 502, Bad Gateway, No se pudo contactar con el proveedor de pagos"
     })
     void mapsEachDomainExceptionToItsStatusAndErrorBody(
@@ -67,6 +69,7 @@ class GlobalExceptionHandlerTest {
                 case "product-not-found" -> new ProductNotFoundException("No existe el producto");
                 case "product-already-exists" -> new ProductAlreadyExistsException("El producto ya existe");
                 case "payments-not-configured" -> new PaymentsNotConfiguredException();
+                case "payment-not-found" -> new PaymentNotFoundException();
                 case "payment-gateway" -> new PaymentGatewayException(new RuntimeException("stripe detail"));
                 default -> new IllegalArgumentException(exception);
             };

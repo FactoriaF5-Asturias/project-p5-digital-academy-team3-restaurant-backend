@@ -1,11 +1,13 @@
 package restaurante.team3.giacobello.payments.gateway;
 
 import com.stripe.StripeClient;
+import com.stripe.exception.InvalidRequestException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 
 import restaurante.team3.giacobello.payments.exceptions.PaymentGatewayException;
+import restaurante.team3.giacobello.payments.exceptions.PaymentNotFoundException;
 
 public class StripeApiPaymentGateway implements StripePaymentGateway {
 
@@ -39,6 +41,8 @@ public class StripeApiPaymentGateway implements StripePaymentGateway {
                     intent.getStatus(),
                     intent.getAmount(),
                     intent.getCurrency());
+        } catch (InvalidRequestException e) {
+            throw new PaymentNotFoundException();
         } catch (StripeException e) {
             throw new PaymentGatewayException(e);
         }

@@ -14,11 +14,24 @@ import restaurante.team3.giacobello.payments.gateway.UnconfiguredPaymentGateway;
 @Configuration
 public class StripeConfig {
 
+    private static final int CONNECT_TIMEOUT_MILLIS = 3000;
+    private static final int READ_TIMEOUT_MILLIS = 10000;
+    private static final int MAX_NETWORK_RETRIES = 1;
+
     @Bean
     StripePaymentGateway stripePaymentGateway(@Value("${stripe.secret-key:}") String secretKey) {
         if (!StringUtils.hasText(secretKey)) {
             return new UnconfiguredPaymentGateway();
         }
-        return new StripeApiPaymentGateway(new StripeClient(secretKey));
+        return new StripeApiPaymentGateway(buildClient(secretKey));
+    }
+
+    private StripeClient buildClient(String secretKey) {
+        return StripeClient.builder()
+                .setApiKey(secretKey)
+                .setConnectTimeout(CONNECT_TIMEOUT_MILLIS)
+                .setReadTimeout(READ_TIMEOUT_MILLIS)
+                .setMaxNetworkRetries(MAX_NETWORK_RETRIES)
+                .build();
     }
 }
