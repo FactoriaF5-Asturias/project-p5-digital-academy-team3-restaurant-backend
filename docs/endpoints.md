@@ -8,8 +8,8 @@ Method - Endpoint - Envia - Recibe
 
 | Hecho | Method | Endpoint                      | Da                                                                 | Recibe                                            | Errores       |
 | ----- | ------ | ----------------------------- | ------------------------------------------------------------------ | ------------------------------------------------- | ------------- |
-| [X]   | POST   | `/api/v1/auth/token`          | `username`, `password`                                             | Token JWT                                        | 400, 401, 409 |
-| [X]   | POST   | `/api/v1/auth/change-password`| `username`, `currentPassword`, `newPassword`                       | Token JWT                                        | 400, 401, 409 |
+| [X]   | POST   | `/api/v1/auth/token`          | `username`, `password`                                             | Token JWT                                         | 400, 401, 409 |
+| [X]   | POST   | `/api/v1/auth/change-password`| `username`, `currentPassword`, `newPassword`                       | Token JWT                                         | 400, 401, 409 |
 | [X]   | GET    | `/api/products`               | ---                                                                | Lista de productos activos                        | 500           |
 | [X]   | GET    | `/api/products/{id}`          | `id` del producto                                                  | Producto                                          | 404, 400      |
 | [X]   | POST   | `/api/products`               | `name`, `description`, `categoryId`, `price`, `imageURL`, `status` | Producto creado                                   | 400, 404, 409 |
@@ -28,6 +28,7 @@ Method - Endpoint - Envia - Recibe
 | [X]   | GET    | `/api/orders`                 | ---                                                                | Visualizar lista de Orders                        |               |
 | [X]   | GET    | `/api/orders/{id}`            | `id` del pedido                                                    | Datos completos del pedido                        |               |
 | [X]   | PUT    | `/api/orders/{id}/status`     | `id` del pedido + `status`                                         | Pedido con el nuevo estado                        |               |
+| [X]   | PUT    | `/api/v1/orders/{id}/pay`     | `id` del pedido (sin body)                                         | Pedido actualizado como pagado                    | 404, 409      |
 | [X]   | GET    | `/api/orders/{id}/invoice`    | `id` del pedido                                                    | Datos de la factura en JSON                       |               |
 | [X]   | GET    | `/api/invoices`               | ---                                                                | Lista de facturas en JSON                         | 500           |
 | [ ]   | WS     | `/ws/orders/{id}`             | `id` del pedido                                                    | Actualizaciones del estado en tiempo real         |               |
