@@ -123,6 +123,36 @@ class OrderControllerIntegrationTest extends IntegrationTest {
 
     @Test
     @Transactional
+    void createReturnsCreatedTakeawayOrder() throws Exception {
+        deleteOrders();
+        String requestBody = """
+                {
+                  "tabletId": 3,
+                  "orderTypeName": "TAKEAWAY",
+                  "paymentMethodName": "CASH",
+                  "items": [
+                    { "productId": 1, "quantity": 2 },
+                    { "productId": 8, "quantity": 1 }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/orders")
+                .servletPath("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"))
+                .andExpect(jsonPath("$.tabletId").value(3))
+                .andExpect(jsonPath("$.orderTypeName").value("TAKEAWAY"))
+                .andExpect(jsonPath("$.paymentMethodName").value("CASH"))
+                .andExpect(jsonPath("$.statusName").value("PENDING"))
+                .andExpect(jsonPath("$.totalAmount").value(33.0))
+                .andExpect(jsonPath("$.items.length()").value(2));
+    }
+
+    @Test
+    @Transactional
     void updateStatusReturnsUpdatedOrder() throws Exception {
         deleteOrders();
         OrderEntity order = saveOrder("PENDING");
