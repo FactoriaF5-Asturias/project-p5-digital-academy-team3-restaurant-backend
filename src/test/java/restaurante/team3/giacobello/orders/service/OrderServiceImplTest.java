@@ -102,6 +102,48 @@ class OrderServiceImplTest {
         }
 
         @Test
+        void shouldCreateTakeawayOrderWithoutInvoice() {
+                ProductEntity product = org.mockito.Mockito.mock(ProductEntity.class);
+                OrderCreateDTORequest request = new OrderCreateDTORequest(
+                                2,
+                                "TAKEAWAY",
+                                "CASH",
+                                List.of(new OrderItemCreateDTORequest(4, 2)));
+                OrderDTOResponse response = new OrderDTOResponse(
+                                7,
+                                2,
+                                "TAKEAWAY",
+                                "CASH",
+                                "PENDING",
+                                new BigDecimal("25.00"),
+                                null,
+                                null,
+                                List.of());
+
+                when(tabletRepository.existsById(2)).thenReturn(true);
+                when(productRepository.findAllById(List.of(4))).thenReturn(List.of(product));
+                when(product.getId()).thenReturn(4);
+                when(product.getPrice()).thenReturn(new BigDecimal("12.50"));
+                when(product.getStatus()).thenReturn(true);
+                doAnswer(invocation -> {
+                        OrderEntity order = invocation.getArgument(0);
+                        order.setId(7);
+                        return order;
+                }).when(orderRepository).save(any(OrderEntity.class));
+                when(orderMapper.toResponse(any(OrderEntity.class))).thenReturn(response);
+
+                OrderDTOResponse result = orderService.create(request);
+
+                assertEquals("TAKEAWAY", result.orderTypeName());
+                ArgumentCaptor<OrderEntity> orderCaptor = ArgumentCaptor.forClass(OrderEntity.class);
+                verify(orderRepository).save(orderCaptor.capture());
+                assertEquals("TAKEAWAY", orderCaptor.getValue().getOrderTypeName());
+                assertEquals("CASH", orderCaptor.getValue().getPaymentMethodName());
+                assertEquals(new BigDecimal("25.00"), orderCaptor.getValue().getTotalAmount());
+                verifyNoInteractions(invoiceRepository);
+        }
+
+        @Test
         void shouldReturnAllOrders() {
                 OrderEntity order = new OrderEntity();
                 OrderDTOResponse response = new OrderDTOResponse(

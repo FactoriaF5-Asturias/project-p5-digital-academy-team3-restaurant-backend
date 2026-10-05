@@ -62,7 +62,8 @@ class OrderControllerIntegrationTest extends IntegrationTest {
     void findAllReturnsOkAndListOfOrders() throws Exception {
         deleteOrders();
         saveOrder("PENDING");
-        mockMvc.perform(get("/api/v1/orders"))
+        mockMvc.perform(get("/api/v1/orders")
+          .header("Authorization", "Bearer " + tokenForRole("KITCHEN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isNotEmpty());
@@ -73,7 +74,8 @@ class OrderControllerIntegrationTest extends IntegrationTest {
     void findByIdReturnsOrder() throws Exception {
         deleteOrders();
         OrderEntity order = saveOrder("ACCEPTED");
-        mockMvc.perform(get("/api/v1/orders/{id}", order.getId()))
+        mockMvc.perform(get("/api/v1/orders/{id}", order.getId())
+          .header("Authorization", "Bearer " + tokenForRole("KITCHEN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(order.getId()))
                 .andExpect(jsonPath("$.statusName").value("ACCEPTED"));
@@ -87,7 +89,8 @@ class OrderControllerIntegrationTest extends IntegrationTest {
         order.setPaidAt(LocalDateTime.of(2026, 9, 28, 13, 15));
         orderRepository.saveAndFlush(order);
 
-        mockMvc.perform(get("/api/v1/orders/{id}", order.getId()))
+        mockMvc.perform(get("/api/v1/orders/{id}", order.getId())
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paidAt").value("2026-09-28T13:15:00"));
     }
@@ -165,6 +168,36 @@ class OrderControllerIntegrationTest extends IntegrationTest {
 
     @Test
     @Transactional
+    void createReturnsCreatedTakeawayOrder() throws Exception {
+        deleteOrders();
+        String requestBody = """
+                {
+                  "tabletId": 3,
+                  "orderTypeName": "TAKEAWAY",
+                  "paymentMethodName": "CASH",
+                  "items": [
+                    { "productId": 1, "quantity": 2 },
+                    { "productId": 8, "quantity": 1 }
+                  ]
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/orders")
+                .servletPath("/api/v1/orders")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isCreated())
+                .andExpect(header().exists("Location"))
+                .andExpect(jsonPath("$.tabletId").value(3))
+                .andExpect(jsonPath("$.orderTypeName").value("TAKEAWAY"))
+                .andExpect(jsonPath("$.paymentMethodName").value("CASH"))
+                .andExpect(jsonPath("$.statusName").value("PENDING"))
+                .andExpect(jsonPath("$.totalAmount").value(33.0))
+                .andExpect(jsonPath("$.items.length()").value(2));
+    }
+
+    @Test
+    @Transactional
     void updateStatusReturnsUpdatedOrder() throws Exception {
         deleteOrders();
         OrderEntity order = saveOrder("PENDING");
@@ -175,6 +208,7 @@ class OrderControllerIntegrationTest extends IntegrationTest {
                 """;
 
         mockMvc.perform(put("/api/v1/orders/{id}/status", order.getId())
+          .header("Authorization", "Bearer " + tokenForRole("KITCHEN"))
                 .servletPath("/api/v1/orders/" + order.getId() + "/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestBody))
@@ -183,6 +217,26 @@ class OrderControllerIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.statusName").value("COMPLETED"));
     }
 
+                @Test
+                @Transactional
+                void kitchenCanRejectPendingOrderOnlyOnce() throws Exception {
+              deleteOrders();
+              OrderEntity order = saveOrder("PENDING");
+              String requestBody = "{\"statusName\":\"CANCELLED\"}";
+
+              mockMvc.perform(put("/api/v1/orders/{id}/status", order.getId())
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statusName").value("CANCELLED"));
+
+              mockMvc.perform(put("/api/v1/orders/{id}/status", order.getId())
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isConflict());
+                }
     @Test
     @Transactional
     void payMarksOrderAsPaidAndIssuesItsInvoice() throws Exception {
@@ -240,14 +294,16 @@ class OrderControllerIntegrationTest extends IntegrationTest {
                 .andReturn().getResponse().getContentAsString();
         Integer orderId = JsonPath.read(createdOrder, "$.id");
 
-        mockMvc.perform(get("/api/v1/invoices"))
+        mockMvc.perform(get("/api/v1/invoices")
+                .header("Authorization", "Bearer " + tokenForRole("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
 
         mockMvc.perform(payRequest(orderId))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/v1/invoices"))
+        mockMvc.perform(get("/api/v1/invoices")
+                .header("Authorization", "Bearer " + tokenForRole("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].orderId").value(orderId));
@@ -274,7 +330,8 @@ class OrderControllerIntegrationTest extends IntegrationTest {
         String productName = JsonPath.read(createdOrder, "$.items[0].productName");
         mockMvc.perform(payRequest(orderId)).andExpect(status().isOk());
 
-        MvcResult result = mockMvc.perform(get("/api/v1/orders/{id}/invoice/pdf", orderId))
+        MvcResult result = mockMvc.perform(get("/api/v1/orders/{id}/invoice/pdf", orderId)
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN")))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF))
                 .andExpect(header().string(
@@ -293,13 +350,15 @@ class OrderControllerIntegrationTest extends IntegrationTest {
         deleteOrders();
         OrderEntity order = saveOrder("PENDING");
 
-        mockMvc.perform(get("/api/v1/orders/{id}/invoice/pdf", order.getId()))
+        mockMvc.perform(get("/api/v1/orders/{id}/invoice/pdf", order.getId())
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN")))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void invoicePdfReturnsNotFoundWhenOrderDoesNotExist() throws Exception {
-        mockMvc.perform(get("/api/v1/orders/{id}/invoice/pdf", 999999))
+        mockMvc.perform(get("/api/v1/orders/{id}/invoice/pdf", 999999)
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN")))
                 .andExpect(status().isNotFound());
     }
 
@@ -311,7 +370,8 @@ class OrderControllerIntegrationTest extends IntegrationTest {
 
     private MockHttpServletRequestBuilder payRequest(Integer id) {
         return put("/api/v1/orders/{id}/pay", id)
-                .servletPath("/api/v1/orders/" + id + "/pay");
+                .servletPath("/api/v1/orders/" + id + "/pay")
+                .header("Authorization", "Bearer " + tokenForRole("ADMIN"));
     }
 
     private OrderEntity saveOrder(String statusName) {

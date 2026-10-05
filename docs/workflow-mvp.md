@@ -19,7 +19,7 @@ Se ha decidido realizar el flujo de usuario completo desde menu hasta realizar l
     - user_id INTEGER PRIMARY KEY FK
     - nickname VARCHAR(60) NOT NULL UNIQUE
     - avatar_url TEXT NULL
-    - role_id INTEGER
+    - role_id INTEGER NOT NULL FK
     - updated_at TIMESTAMP
 - PRODUCTS: catálogo de producto
     - id PK
@@ -76,7 +76,7 @@ Atajos:
 
 ### Modelo Entidad-Relación
 USERS_AUTH 1:1 USERS_DETAILS
-USERS_DETAILS N:1 USERS_ROLE
+USERS_ROLE 1:N USERS_DETAILS
 
 TABLETS 1:N ORDERS
 ORDERS 1:N ORDER_ITEMS

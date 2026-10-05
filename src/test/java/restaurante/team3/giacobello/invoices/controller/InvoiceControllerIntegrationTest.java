@@ -41,13 +41,20 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
     private InvoiceRepository invoiceRepository;
 
     @Test
-    void findAllReturnsOkAndListOfInvoices() throws Exception {
-        mockMvc.perform(get("/api/v1/invoices"))
+    void adminCanFindAllInvoices() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices")
+            .header("Authorization", "Bearer " + tokenForRole("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
 
     @Test
+    void clientCannotFindAllInvoices() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices")
+                .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
+                .andExpect(status().isForbidden());
+    }
+    
     @Transactional
     void findAllWithDateRangeReturnsOnlyInvoicesIssuedInsideRange() throws Exception {
         saveInvoice("INV-SEP", LocalDateTime.of(2026, 9, 30, 23, 45));
@@ -64,6 +71,7 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
     @Test
     void findAllWithStartDateAfterEndDateReturnsBadRequest() throws Exception {
         mockMvc.perform(get("/api/v1/invoices")
+            .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("from", "2026-09-30")
                 .param("to", "2026-09-01"))
                 .andExpect(status().isBadRequest());
@@ -72,6 +80,7 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
     @Test
     void findAllWithOnlyOneDateReturnsBadRequest() throws Exception {
         mockMvc.perform(get("/api/v1/invoices")
+        .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("from", "2026-09-01"))
                 .andExpect(status().isBadRequest());
     }
@@ -86,6 +95,7 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
         saveInvoice("INV-LAST-YEAR", LocalDateTime.of(2030, 12, 31, 23, 59), new BigDecimal("160.00"));
 
         mockMvc.perform(get("/api/v1/invoices/totals")
+            .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("date", "2031-08-15"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.daily").value(10.0))
@@ -101,6 +111,7 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
     @Test
     void salesTotalsReturnsZeroWhenThereAreNoSales() throws Exception {
         mockMvc.perform(get("/api/v1/invoices/totals")
+            .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("date", "2035-06-15"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.daily").value(0))
@@ -121,6 +132,7 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
         saveInvoice("INV-Q4-OCT", LocalDateTime.of(2032, 10, 1, 0, 30));
 
         MvcResult result = mockMvc.perform(get("/api/v1/invoices/report/pdf")
+            .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("period", "QUARTER")
                 .param("date", "2032-08-15"))
                 .andExpect(status().isOk())
@@ -141,6 +153,7 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
     @Test
     void salesReportPdfWithoutDateUsesToday() throws Exception {
         mockMvc.perform(get("/api/v1/invoices/report/pdf")
+            .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("period", "DAY"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_PDF));
@@ -149,6 +162,7 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
     @Test
     void salesReportPdfExposesContentDispositionToTheFrontend() throws Exception {
         mockMvc.perform(get("/api/v1/invoices/report/pdf")
+                .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("period", "DAY")
                 .header(HttpHeaders.ORIGIN, "http://localhost:5173"))
                 .andExpect(status().isOk())
@@ -160,13 +174,15 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
     @Test
     void salesReportPdfWithUnknownPeriodReturnsBadRequest() throws Exception {
         mockMvc.perform(get("/api/v1/invoices/report/pdf")
+            .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("period", "WEEK"))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void salesReportPdfWithoutPeriodReturnsBadRequest() throws Exception {
-        mockMvc.perform(get("/api/v1/invoices/report/pdf"))
+        mockMvc.perform(get("/api/v1/invoices/report/pdf")
+                .header("Authorization", "Bearer " + tokenForRole("ADMIN")))
                 .andExpect(status().isBadRequest());
     }
 

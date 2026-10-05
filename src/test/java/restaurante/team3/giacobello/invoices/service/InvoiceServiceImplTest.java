@@ -21,8 +21,6 @@ import restaurante.team3.giacobello.invoices.dto.SalesTotalsDTOResponse;
 import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
 import restaurante.team3.giacobello.invoices.mappers.InvoiceMapper;
 import restaurante.team3.giacobello.invoices.repository.InvoiceRepository;
-import restaurante.team3.giacobello.invoices.service.InvoiceServiceImpl;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;

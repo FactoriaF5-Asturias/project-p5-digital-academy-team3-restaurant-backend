@@ -8,6 +8,8 @@ Method - Endpoint - Envia - Recibe
 
 | Hecho | Method | Endpoint                         | Da                                                                 | Recibe                                            | Errores       |
 | ----- | ------ | -------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------- | ------------- |
+| [X]   | POST   | `/api/v1/auth/token`          | `username`, `password`                                             | Token JWT                                        | 400, 401, 409 |
+| [X]   | POST   | `/api/v1/auth/change-password`| `username`, `currentPassword`, `newPassword`                       | Token JWT                                        | 400, 401, 409 |
 | [X]   | GET    | `/api/v1/admin/products`         | ---                                                                | Lista de todos los productos (activos e inactivos) | 401, 403, 500 |
 | [X]   | GET    | `/api/v1/products`               | ---                                                                | Lista de productos activos                        | 500           |
 | [X]   | GET    | `/api/v1/products/{id}`          | `id` del producto                                                  | Producto                                          | 404, 400      |
@@ -34,124 +36,72 @@ Method - Endpoint - Envia - Recibe
 
 ## Probar peticiones de endpoints
 
-### Probar POST, PUT y DELETE de productos y categorías en Postman
+### Probar autenticación
 
-Arrancar el backend y la base de datos. En Postman, para cada petición:
+#### POST /api/v1/auth/token
 
-1. Seleccionar el método HTTP indicado y usar la URL `http://localhost:8080` más
-   la ruta del endpoint.
-2. En **Headers**, comprobar `Content-Type: application/json` cuando se envíe un
-   body.
-3. Para POST y PUT, abrir **Body > raw** y elegir **JSON**. DELETE no lleva body.
+1. En Postman seleccionar método **POST** y esta URL:
 
-#### Productos
+```text
+http://localhost:8080/api/v1/auth/token
+```
 
-Las escrituras de productos están permitidas sin autenticación en la configuración
-actual. El `categoryId` debe corresponder a una categoría existente.
-
-`Pasta alla Singleton` ya se inserta con los datos iniciales. Para probar POST,
-se crea un producto nuevo basado en ese plato, con un nombre distinto. Si
-`Pasta alla Singleton 2` ya existe, POST responderá **409 Conflict**.
-
-**POST** `http://localhost:8080/api/v1/products`
+2. En **Headers**, añadir `Content-Type: application/json`.
+3. En **Body**, seleccionar **raw** y **JSON**, y enviar las credenciales:
 
 ```json
 {
-  "name": "Pasta alla Singleton 2",
-  "description": "Pasta con salsa de tomate, berenjena frita, albahaca y ricotta salata, todo un clásico",
-  "categoryId": 1,
-  "price": 12.5,
-  "imageUrl": "/images/products/Pasta_alla_Singleton.jpg",
-  "status": true
+  "username": "Kitchen",
+  "password": "tu-contraseña"
 }
 ```
 
-`categoryId: 1` corresponde a `Especialidades`. Si el nombre todavía no existe,
-la respuesta esperada es **201 Created**. Guarda el `id` real de la respuesta.
-El `id: 13` mostrado es solo ilustrativo. El objeto de respuesta usa
-`category` (nombre de la categoría), no `categoryId`:
+4. Con credenciales válidas, la respuesta es **200 OK**:
 
 ```json
 {
-  "id": 13,
-  "name": "Pasta alla Singleton 2",
-  "description": "Pasta con salsa de tomate, berenjena frita, albahaca y ricotta salata, todo un clásico",
-  "category": "Especialidades",
-  "price": 12.5,
-  "status": true,
-  "imageUrl": "/images/products/Pasta_alla_Singleton.jpg"
+  "token": "eyJ..."
 }
 ```
 
-**PUT** `http://localhost:8080/api/v1/products/{id}`
+Si el usuario o la contraseña no son válidos, responde **401 Unauthorized**. Los
+campos vacíos responden **400 Bad Request**. No requiere autenticación previa.
 
-Sustituye `{id}` por el ID de `Pasta alla Singleton`, obtenido con
-`GET /api/v1/products` (no uses el ID del producto creado con POST). PUT
-requiere enviar todos los campos, incluso los que no cambien:
+#### POST /api/v1/auth/change-password
+
+Este endpoint se usa solo cuando una cuenta tiene pendiente cambiar su
+contraseña inicial. Antes de usarlo, `POST /api/v1/auth/token` debe responder
+**409 Conflict** para esa cuenta.
+
+1. En Postman seleccionar método **POST** y esta URL:
+
+```text
+http://localhost:8080/api/v1/auth/change-password
+```
+
+2. En **Headers**, añadir `Content-Type: application/json`.
+3. En **Body**, seleccionar **raw** y **JSON**, y enviar:
 
 ```json
 {
-  "name": "Pasta alla Singleton",
-  "description": "Pasta con salsa de tomate, berenjena frita, albahaca y ricotta salata, todo un clásico",
-  "categoryId": 1,
-  "price": 12.5,
-  "imageUrl": "/images/products/Pasta_alla_Singleton.jpg",
-  "status": true
+  "username": "Admin",
+  "currentPassword": "contraseña-actual",
+  "newPassword": "nueva-contraseña"
 }
 ```
 
-Respuesta esperada: **200 OK** con el producto actualizado y el mismo `id`.
-
-**DELETE** `http://localhost:8080/api/v1/products/{id}`
-
-Sustituye `{id}` por el ID de `Pasta alla Singleton`. No envíes body. Respuesta
-esperada: **204 No Content**, sin JSON. Es un borrado lógico: el producto queda
-con `status: false` y deja de aparecer en `GET /api/v1/products`. Úsalo solo si
-quieres desactivar este producto real del menú.
-
-#### Categorías
-
-Las peticiones POST, PUT y DELETE de categorías requieren autenticación según la
-configuración de seguridad actual. En Postman configura la autenticación válida
-para el entorno antes de enviarlas; sin ella, la respuesta será **403 Forbidden**.
-
-**POST** `http://localhost:8080/api/v1/categories`
+4. Si el cambio es correcto, responde **200 OK** y devuelve un token JWT:
 
 ```json
 {
-  "name": "Bebidas de prueba"
+  "token": "eyJ..."
 }
 ```
 
-Respuesta esperada: **201 Created** con la categoría y su ID:
-
-```json
-{
-  "id": 8,
-  "name": "Bebidas de prueba"
-}
-```
-
-**PUT** `http://localhost:8080/api/v1/categories/8`
-
-Sustituye `8` por el ID creado.
-
-```json
-{
-  "name": "Bebidas sin alcohol"
-}
-```
-
-Respuesta esperada: **200 OK** con el mismo ID y el nombre actualizado.
-
-**DELETE** `http://localhost:8080/api/v1/categories/8`
-
-Sustituye `8` por el ID que quieras eliminar. No envíes body. La categoría debe
-estar vacía, sin productos asociados. Respuesta esperada: **204 No Content** y
-sin JSON. Si todavía tiene productos, la API responde **409 Conflict**.
-
-En ambas rutas, un body inválido puede dar **400 Bad Request**, un ID inexistente
-**404 Not Found** y un nombre duplicado **409 Conflict**.
+Si la contraseña actual no es correcta, responde **401 Unauthorized**. Si la
+nueva contraseña no cumple la validación o es igual a la anterior, responde
+**400 Bad Request**. Si la cuenta ya no tiene pendiente el cambio inicial,
+responde **409 Conflict** y debe iniciar sesión en `POST /api/v1/auth/token`.
 
 ### Probar peticiones de pedidos
 
@@ -194,6 +144,9 @@ Content-Type: application/json
 Valores admitidos: `orderTypeName` = `DINE IN` o `TAKEAWAY`; `paymentMethodName` = `CASH` o `CARD`. Cualquier otro (incluido `DELIVERY`) devuelve 400.
 
 4. Respuesta tiene quer ser: 201 ok, significa que el order ha sido creado. Para verlo usar otro endpoint GET api/v1/orders o GET /api/orders/{id}.
+
+Para pedidos para llevar, usar `"orderTypeName": "TAKEAWAY"`; al igual que
+`DINE IN`, actualmente solo se admite el método de pago `CASH`.
 
 #### PUT /api/v1/orders/{id}/status
 
