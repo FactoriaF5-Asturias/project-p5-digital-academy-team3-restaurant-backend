@@ -53,9 +53,15 @@ Flujo:
 
 1. El frontend llama a `POST /api/v1/payments/create-intent` con `{ "items": [ { "productId": 1, "quantity": 2 } ] }`. El backend calcula el importe con los precios de la base de datos y responde `{ "paymentIntentId", "clientSecret", "amount" }`. Errores: 400/409 por productos o cantidades inválidos, 503 sin clave, 502 si falla Stripe.
 2. Stripe.js confirma el pago en el navegador con la clave publicable (`pk_test_...`, solo en el frontend) y el `clientSecret`.
-3. El frontend llama a `POST /api/v1/orders` con `paymentMethodName: "CARD"` y el campo `paymentIntentId`. El backend comprueba en Stripe que el pago está `succeeded`, en euros y por el total exacto del pedido, y crea el pedido ya pagado (`paidAt` informado) con su factura. Errores: 402 si el pago no se ha completado, 409 si el importe no coincide o el pago ya se usó en otro pedido, 400 si `paymentIntentId` viaja con `CASH`.
+3. El frontend llama a `POST /api/v1/orders` con `paymentMethodName: "CARD"` y el campo `paymentIntentId`. El backend comprueba en Stripe que el pago está `succeeded`, en euros y por el total exacto del pedido, y crea el pedido ya pagado (`paidAt` informado) con su factura. Errores: 402 si el pago no se ha completado, 409 si el importe no coincide o el pago ya se usó en otro pedido, 400 si `paymentIntentId` no existe, tiene un formato inválido o viaja con `CASH`.
 
 Tarjeta de prueba: `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC.
+
+Límites a tener en cuenta:
+
+- El pago no queda ligado a unos productos concretos, solo a un importe: sirve para cualquier pedido con el mismo total, una sola vez.
+- `POST /api/v1/payments/create-intent` es público y no tiene rate limit; está pensado solo para la demo en modo test, no para producción.
+- Si el pago se completó pero el pedido no se puede crear (importe distinto, producto no disponible, datos inválidos), el backend devuelve el dinero con un refund en Stripe y responde el error con "el pago se ha devuelto". Si el refund también falla, queda en el log como `No se pudo devolver el pago` con el id del pago y hay que devolverlo a mano desde el dashboard. El importe máximo con tarjeta es 999.999,99 €.
 
 ### Opción A: todo en Docker
 
