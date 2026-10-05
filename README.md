@@ -57,6 +57,21 @@ Flujo:
 
 Tarjeta de prueba: `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC.
 
+#### Probarlo con Postman
+
+Sin frontend se puede probar el flujo entero con la colección [`docs/postman/stripe-pago-tarjeta.postman_collection.json`](docs/postman/stripe-pago-tarjeta.postman_collection.json):
+
+1. Importa el fichero en Postman (**Import**).
+2. En la pestaña **Variables** de la colección, pon tu clave `sk_test_...` en `stripeKey`. Postman la guarda en su Vault; no la subas al repositorio.
+3. Con el backend arrancado, lanza las peticiones en orden o con **Run**:
+   - **1. Crear intento de pago**: guarda el `paymentIntentId` en una variable.
+   - **2. Pagar con tarjeta de prueba**: confirma el pago en Stripe con `pm_card_visa`, que hace el papel de Stripe.js.
+   - **3. Crear pedido pagado**: crea el pedido con ese pago y comprueba que vuelve `201` con `paidAt`.
+
+![Ejecución de la colección en Postman: las tres peticiones pasan](docs/img/postman-stripe-run.png)
+
+Para ver los errores: lanza la 3 otra vez y da `409` (pago ya usado). Si pones `quantity` a `1` y repites 1, 2 y 3, el importe no coincide con el pedido de 2 unidades: da `409` y el pago aparece como devuelto en el dashboard de Stripe.
+
 Límites a tener en cuenta:
 
 - El pago no queda ligado a unos productos concretos, solo a un importe: sirve para cualquier pedido con el mismo total, una sola vez.

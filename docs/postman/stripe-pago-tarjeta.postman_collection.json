@@ -1,0 +1,96 @@
+{
+  "info": {
+    "name": "Giacobello - Pago con tarjeta (Stripe test)",
+    "description": "Flujo create-intent -> confirmar en Stripe -> POST /orders. Rellena la variable stripeKey (pestaña Variables de la colección, columna Current value) con tu clave de test. Nunca la pongas en Initial value ni la exportes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api/v1" },
+    { "key": "stripeKey", "value": "" },
+    { "key": "quantity", "value": "2" },
+    { "key": "paymentIntentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Crear intento de pago",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 con clientSecret', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.collectionVariables.set('paymentIntentId', body.paymentIntentId);",
+              "console.log('Importe:', body.amount, 'Pago:', body.paymentIntentId);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/payments/create-intent",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"items\": [ { \"productId\": 1, \"quantity\": {{quantity}} } ]\n}"
+        }
+      }
+    },
+    {
+      "name": "2. Pagar con tarjeta de prueba (Stripe)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Pago succeeded', () => pm.expect(pm.response.json().status).to.eql('succeeded'));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "basic",
+          "basic": [
+            { "key": "username", "value": "{{stripeKey}}", "type": "string" },
+            { "key": "password", "value": "", "type": "string" }
+          ]
+        },
+        "method": "POST",
+        "url": "https://api.stripe.com/v1/payment_intents/{{paymentIntentId}}/confirm",
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [{ "key": "payment_method", "value": "pm_card_visa" }]
+        }
+      }
+    },
+    {
+      "name": "3. Crear pedido pagado",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('201 y pagado', () => {",
+              "  pm.response.to.have.status(201);",
+              "  pm.expect(pm.response.json().paidAt).to.not.be.null;",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "url": "{{baseUrl}}/orders",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"tabletId\": 1,\n  \"orderTypeName\": \"DINE IN\",\n  \"paymentMethodName\": \"CARD\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"items\": [ { \"productId\": 1, \"quantity\": 2 } ]\n}"
+        }
+      }
+    }
+  ]
+}
