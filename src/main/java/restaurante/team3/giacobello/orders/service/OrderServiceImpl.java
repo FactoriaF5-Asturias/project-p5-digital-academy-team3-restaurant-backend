@@ -8,10 +8,14 @@ import java.util.stream.Collectors;
 import java.util.Set;
 import java.util.Locale;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import restaurante.team3.giacobello.invoices.entity.InvoiceEntity;
@@ -34,6 +38,8 @@ import restaurante.team3.giacobello.tablets.repository.TabletRepository;
 @Service
 public class OrderServiceImpl implements OrderService {
 
+    private static final Logger log = LoggerFactory.getLogger(OrderServiceImpl.class);
+
     private static final Set<String> ALLOWED_STATUS_NAMES = Set.of(
             "PENDING",
             "CANCELLED",
@@ -52,6 +58,7 @@ public class OrderServiceImpl implements OrderService {
     private final InvoiceRepository invoiceRepository;
     private final OrderTotalCalculator orderTotalCalculator;
     private final StripePaymentGateway paymentGateway;
+    private final TransactionTemplate transactionTemplate;
 
     public OrderServiceImpl(
             OrderRepository orderRepository,
@@ -61,7 +68,8 @@ public class OrderServiceImpl implements OrderService {
             OrderItemRepository orderItemRepository,
             InvoiceRepository invoiceRepository,
             OrderTotalCalculator orderTotalCalculator,
-            StripePaymentGateway paymentGateway) {
+            StripePaymentGateway paymentGateway,
+            PlatformTransactionManager transactionManager) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.productRepository = productRepository;
@@ -70,6 +78,7 @@ public class OrderServiceImpl implements OrderService {
         this.invoiceRepository = invoiceRepository;
         this.orderTotalCalculator = orderTotalCalculator;
         this.paymentGateway = paymentGateway;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
     @Override
@@ -93,9 +102,40 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional
     public OrderDTOResponse create(OrderCreateDTORequest request) {
         validateRequest(request);
+
+        String paymentIntentId = request.paymentIntentId();
+
+        if (paymentIntentId == null) {
+            return persist(request, priceOrder(request), false);
+        }
+
+        if (orderRepository.existsByStripePaymentIntentId(paymentIntentId)) {
+            throw paymentAlreadyUsed();
+        }
+
+        PaymentIntentDetails details = paymentGateway.retrievePaymentIntent(paymentIntentId);
+
+        if (!PAYMENT_SUCCEEDED.equals(details.status())) {
+            throw new ResponseStatusException(
+                    HttpStatus.PAYMENT_REQUIRED,
+                    "El pago con tarjeta no se ha completado");
+        }
+
+        OrderPricing pricing;
+        try {
+            pricing = priceOrder(request);
+            verifyPaidAmount(details, pricing);
+        } catch (ResponseStatusException e) {
+            throw refundAndRethrow(paymentIntentId, e);
+        }
+
+        return persist(request, pricing, true);
+    }
+
+    private OrderPricing priceOrder(OrderCreateDTORequest request) {
+        orderTotalCalculator.validateItems(request.items());
 
         List<Integer> productIds = request.items()
                 .stream()
@@ -108,14 +148,55 @@ public class OrderServiceImpl implements OrderService {
                         ProductEntity::getId,
                         Function.identity()));
 
+        return orderTotalCalculator.calculate(request.items(), products);
+    }
+
+    private void verifyPaidAmount(PaymentIntentDetails details, OrderPricing pricing) {
+        long expectedAmountInCents = pricing.totalInCents();
+
+        if (expectedAmountInCents > StripePaymentGateway.MAX_AMOUNT_IN_CENTS) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El importe supera el máximo permitido para pagar con tarjeta");
+        }
+
+        if (!StripePaymentGateway.CURRENCY.equalsIgnoreCase(details.currency())
+                || details.amountInCents() != expectedAmountInCents) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El importe no coincide con el pedido");
+        }
+    }
+
+    private ResponseStatusException refundAndRethrow(String paymentIntentId, ResponseStatusException cause) {
+        try {
+            paymentGateway.refund(paymentIntentId);
+        } catch (RuntimeException e) {
+            log.error("No se pudo devolver el pago {}", paymentIntentId);
+            return cause;
+        }
+        return new ResponseStatusException(
+                cause.getStatusCode(),
+                cause.getReason() + "; el pago se ha devuelto");
+    }
+
+    private OrderDTOResponse persist(OrderCreateDTORequest request, OrderPricing pricing, boolean paidOnline) {
+        return transactionTemplate.execute(status -> save(request, pricing, paidOnline));
+    }
+
+    private OrderDTOResponse save(OrderCreateDTORequest request, OrderPricing pricing, boolean paidOnline) {
         OrderEntity order = new OrderEntity();
         order.setTabletId(request.tabletId());
         order.setOrderTypeName(request.orderTypeName());
         order.setPaymentMethodName(request.paymentMethodName());
         order.setStatusName("PENDING");
         order.setCreatedAt(LocalDateTime.now());
+        order.setTotalAmount(pricing.total());
 
-        OrderPricing pricing = orderTotalCalculator.calculate(request.items(), products);
+        if (paidOnline) {
+            order.setStripePaymentIntentId(request.paymentIntentId());
+            order.setPaidAt(order.getCreatedAt());
+        }
 
         List<OrderItemEntity> lines = pricing.lines()
                 .stream()
@@ -126,17 +207,6 @@ public class OrderServiceImpl implements OrderService {
                         line.unitPrice(),
                         line.subtotal()))
                 .toList();
-
-        order.setTotalAmount(pricing.total());
-
-        String paymentIntentId = request.paymentIntentId();
-        boolean paidOnline = paymentIntentId != null;
-
-        if (paidOnline) {
-            verifyPaymentIntent(paymentIntentId, pricing.totalInCents());
-            order.setStripePaymentIntentId(paymentIntentId);
-            order.setPaidAt(order.getCreatedAt());
-        }
 
         OrderEntity savedOrder = saveOrder(order, paidOnline);
         orderItemRepository.saveAll(lines);
@@ -157,27 +227,6 @@ public class OrderServiceImpl implements OrderService {
                 throw paymentAlreadyUsed();
             }
             throw e;
-        }
-    }
-
-    private void verifyPaymentIntent(String paymentIntentId, long expectedAmountInCents) {
-        if (orderRepository.existsByStripePaymentIntentId(paymentIntentId)) {
-            throw paymentAlreadyUsed();
-        }
-
-        PaymentIntentDetails details = paymentGateway.retrievePaymentIntent(paymentIntentId);
-
-        if (!PAYMENT_SUCCEEDED.equals(details.status())) {
-            throw new ResponseStatusException(
-                    HttpStatus.PAYMENT_REQUIRED,
-                    "El pago con tarjeta no se ha completado");
-        }
-
-        if (!StripePaymentGateway.CURRENCY.equalsIgnoreCase(details.currency())
-                || details.amountInCents() != expectedAmountInCents) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "El importe pagado no coincide con el total del pedido");
         }
     }
 
@@ -233,8 +282,6 @@ public class OrderServiceImpl implements OrderService {
                     HttpStatus.BAD_REQUEST,
                     "La mesa no existe");
         }
-
-        orderTotalCalculator.validateItems(request.items());
     }
 
     @Override

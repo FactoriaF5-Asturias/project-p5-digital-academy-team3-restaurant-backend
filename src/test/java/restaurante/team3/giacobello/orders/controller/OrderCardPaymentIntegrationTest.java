@@ -3,6 +3,8 @@ package restaurante.team3.giacobello.orders.controller;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -98,6 +100,8 @@ class OrderCardPaymentIntegrationTest extends IntegrationTest {
 
         placeOrder(body("CARD", "pi_once")).andExpect(status().isCreated());
         placeOrder(body("CARD", "pi_once")).andExpect(status().isConflict());
+
+        verify(paymentGateway, never()).refund("pi_once");
     }
 
     @Test
@@ -116,6 +120,8 @@ class OrderCardPaymentIntegrationTest extends IntegrationTest {
                 .thenReturn(new PaymentIntentDetails("pi_low", "succeeded", 100, "eur"));
 
         placeOrder(body("CARD", "pi_low")).andExpect(status().isConflict());
+
+        verify(paymentGateway).refund("pi_low");
     }
 
     @Test

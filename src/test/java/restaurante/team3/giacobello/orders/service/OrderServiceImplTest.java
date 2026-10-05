@@ -19,6 +19,7 @@ import restaurante.team3.giacobello.orders.mappers.OrderMapper;
 import restaurante.team3.giacobello.orders.repository.OrderItemRepository;
 import restaurante.team3.giacobello.orders.repository.OrderRepository;
 import restaurante.team3.giacobello.payments.exceptions.PaymentGatewayException;
+import restaurante.team3.giacobello.payments.exceptions.PaymentNotFoundException;
 import restaurante.team3.giacobello.payments.exceptions.PaymentsNotConfiguredException;
 import restaurante.team3.giacobello.payments.gateway.PaymentIntentDetails;
 import restaurante.team3.giacobello.payments.gateway.StripePaymentGateway;
@@ -28,6 +29,7 @@ import restaurante.team3.giacobello.tablets.repository.TabletRepository;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -38,6 +40,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -68,6 +74,9 @@ class OrderServiceImplTest {
 
         @Mock
         private StripePaymentGateway paymentGateway;
+
+        @Mock
+        private PlatformTransactionManager transactionManager;
 
         @Spy
         private OrderTotalCalculator orderTotalCalculator = new OrderTotalCalculator();
@@ -282,7 +291,9 @@ class OrderServiceImplTest {
 
         @Test
         void shouldCreatePaidOrderAndIssueInvoiceWhenPaymentIntentSucceeded() {
-                stubCardOrder();
+                stubTablet();
+                stubProduct("12.50", true);
+                stubSavedOrder();
                 when(paymentGateway.retrievePaymentIntent("pi_1"))
                                 .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2500, "eur"));
 
@@ -300,12 +311,12 @@ class OrderServiceImplTest {
                 assertEquals("INV-7", invoiceCaptor.getValue().getInvoiceNumber());
                 assertEquals(new BigDecimal("25.00"), invoiceCaptor.getValue().getTotalAmount());
                 assertEquals(saved.getPaidAt(), invoiceCaptor.getValue().getIssuedAt());
+                verify(paymentGateway, never()).refund(anyString());
         }
 
         @Test
-        void shouldRejectWithPaymentRequiredWhenPaymentIntentHasNotSucceeded() {
-                stubCardOrderValidation();
-                when(orderRepository.existsByStripePaymentIntentId("pi_1")).thenReturn(false);
+        void shouldRejectWithPaymentRequiredWithoutRefundWhenPaymentIntentHasNotSucceeded() {
+                stubTablet();
                 when(paymentGateway.retrievePaymentIntent("pi_1"))
                                 .thenReturn(new PaymentIntentDetails("pi_1", "requires_payment_method", 2500, "eur"));
 
@@ -313,13 +324,15 @@ class OrderServiceImplTest {
                                 () -> orderService.create(cardRequest("pi_1")));
 
                 assertEquals(HttpStatus.PAYMENT_REQUIRED.value(), ex.getStatusCode().value());
+                verify(paymentGateway, never()).refund(anyString());
                 verify(orderRepository, never()).save(any(OrderEntity.class));
-                verifyNoInteractions(invoiceRepository);
+                verifyNoInteractions(invoiceRepository, productRepository);
         }
 
         @Test
-        void shouldRejectWhenPaidAmountDoesNotMatchOrderTotal() {
-                stubCardOrderValidation();
+        void shouldRefundAndRejectWhenPaidAmountDoesNotMatchOrderTotal() {
+                stubTablet();
+                stubProduct("12.50", true);
                 when(paymentGateway.retrievePaymentIntent("pi_1"))
                                 .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2400, "eur"));
 
@@ -327,13 +340,16 @@ class OrderServiceImplTest {
                                 () -> orderService.create(cardRequest("pi_1")));
 
                 assertEquals(HttpStatus.CONFLICT.value(), ex.getStatusCode().value());
+                assertEquals("El importe no coincide con el pedido; el pago se ha devuelto", ex.getReason());
+                verify(paymentGateway).refund("pi_1");
                 verify(orderRepository, never()).save(any(OrderEntity.class));
                 verifyNoInteractions(invoiceRepository);
         }
 
         @Test
-        void shouldRejectWhenPaidCurrencyIsNotEuro() {
-                stubCardOrderValidation();
+        void shouldRefundAndRejectWhenPaidCurrencyIsNotEuro() {
+                stubTablet();
+                stubProduct("12.50", true);
                 when(paymentGateway.retrievePaymentIntent("pi_1"))
                                 .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2500, "usd"));
 
@@ -341,12 +357,89 @@ class OrderServiceImplTest {
                                 () -> orderService.create(cardRequest("pi_1")));
 
                 assertEquals(HttpStatus.CONFLICT.value(), ex.getStatusCode().value());
+                verify(paymentGateway).refund("pi_1");
+        }
+
+        @Test
+        void shouldRefundAndRejectWhenAProductIsInactive() {
+                stubTablet();
+                stubProduct("12.50", false);
+                when(paymentGateway.retrievePaymentIntent("pi_1"))
+                                .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2500, "eur"));
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(cardRequest("pi_1")));
+
+                assertEquals(HttpStatus.CONFLICT.value(), ex.getStatusCode().value());
+                assertTrue(ex.getReason().endsWith("; el pago se ha devuelto"));
+                verify(paymentGateway).refund("pi_1");
                 verify(orderRepository, never()).save(any(OrderEntity.class));
         }
 
         @Test
-        void shouldRejectWhenPaymentIntentWasAlreadyUsedByAnotherOrder() {
-                stubCardOrderValidation();
+        void shouldRefundAndRejectWhenAProductDoesNotExist() {
+                stubTablet();
+                when(productRepository.findAllById(List.of(4))).thenReturn(List.of());
+                when(paymentGateway.retrievePaymentIntent("pi_1"))
+                                .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2500, "eur"));
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(cardRequest("pi_1")));
+
+                assertEquals(HttpStatus.BAD_REQUEST.value(), ex.getStatusCode().value());
+                verify(paymentGateway).refund("pi_1");
+        }
+
+        @Test
+        void shouldRefundAndRejectWhenItemsAreInvalidAfterTheIntentSucceeded() {
+                stubTablet();
+                when(paymentGateway.retrievePaymentIntent("pi_1"))
+                                .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2500, "eur"));
+                OrderCreateDTORequest request = new OrderCreateDTORequest(
+                                2, "DINE IN", "CARD",
+                                List.of(new OrderItemCreateDTORequest(4, 1), new OrderItemCreateDTORequest(4, 1)),
+                                "pi_1");
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(request));
+
+                assertEquals(HttpStatus.BAD_REQUEST.value(), ex.getStatusCode().value());
+                verify(paymentGateway).refund("pi_1");
+        }
+
+        @Test
+        void shouldRefundAndRejectWhenTheTotalExceedsTheCardLimit() {
+                stubTablet();
+                stubProduct("999999.99", true);
+                when(paymentGateway.retrievePaymentIntent("pi_1"))
+                                .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2500, "eur"));
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(cardRequest("pi_1")));
+
+                assertEquals(HttpStatus.BAD_REQUEST.value(), ex.getStatusCode().value());
+                verify(paymentGateway).refund("pi_1");
+        }
+
+        @Test
+        void shouldStillReturnTheOriginalErrorWhenTheRefundFails() {
+                stubTablet();
+                stubProduct("12.50", true);
+                when(paymentGateway.retrievePaymentIntent("pi_1"))
+                                .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2400, "eur"));
+                doThrow(new PaymentGatewayException(new RuntimeException("boom")))
+                                .when(paymentGateway).refund("pi_1");
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(cardRequest("pi_1")));
+
+                assertEquals(HttpStatus.CONFLICT.value(), ex.getStatusCode().value());
+                assertEquals("El importe no coincide con el pedido", ex.getReason());
+        }
+
+        @Test
+        void shouldRejectWithoutRefundWhenPaymentIntentWasAlreadyUsedByAnotherOrder() {
+                stubTablet();
                 when(orderRepository.existsByStripePaymentIntentId("pi_1")).thenReturn(true);
 
                 ResponseStatusException ex = assertThrows(ResponseStatusException.class,
@@ -358,8 +451,9 @@ class OrderServiceImplTest {
         }
 
         @Test
-        void shouldTranslateUniqueConstraintRaceToConflict() {
-                stubCardOrderValidation();
+        void shouldTranslateUniqueConstraintRaceToConflictWithoutRefund() {
+                stubTablet();
+                stubProduct("12.50", true);
                 when(paymentGateway.retrievePaymentIntent("pi_1"))
                                 .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2500, "eur"));
                 when(orderRepository.save(any(OrderEntity.class)))
@@ -369,17 +463,14 @@ class OrderServiceImplTest {
                                 () -> orderService.create(cardRequest("pi_1")));
 
                 assertEquals(HttpStatus.CONFLICT.value(), ex.getStatusCode().value());
+                verify(paymentGateway, never()).refund(anyString());
                 verifyNoInteractions(invoiceRepository);
         }
 
         @Test
         void shouldNotSwallowUnrelatedIntegrityViolationsOfUnpaidOrders() {
-                ProductEntity product = org.mockito.Mockito.mock(ProductEntity.class);
-                when(tabletRepository.existsById(2)).thenReturn(true);
-                when(productRepository.findAllById(List.of(4))).thenReturn(List.of(product));
-                when(product.getId()).thenReturn(4);
-                when(product.getPrice()).thenReturn(new BigDecimal("12.50"));
-                when(product.getStatus()).thenReturn(true);
+                stubTablet();
+                stubProduct("12.50", true);
                 when(orderRepository.save(any(OrderEntity.class)))
                                 .thenThrow(new DataIntegrityViolationException("other"));
 
@@ -412,21 +503,32 @@ class OrderServiceImplTest {
         }
 
         @Test
-        void shouldPropagateWhenStripeIsNotConfigured() {
-                stubCardOrderValidation();
+        void shouldPropagateWhenStripeIsNotConfiguredWithoutRefund() {
+                stubTablet();
                 when(paymentGateway.retrievePaymentIntent("pi_1")).thenThrow(new PaymentsNotConfiguredException());
 
                 assertThrows(PaymentsNotConfiguredException.class, () -> orderService.create(cardRequest("pi_1")));
+                verify(paymentGateway, never()).refund(anyString());
                 verify(orderRepository, never()).save(any(OrderEntity.class));
         }
 
         @Test
-        void shouldPropagateGatewayFailures() {
-                stubCardOrderValidation();
+        void shouldPropagateUnknownPaymentIntentsWithoutRefund() {
+                stubTablet();
+                when(paymentGateway.retrievePaymentIntent("pi_1")).thenThrow(new PaymentNotFoundException());
+
+                assertThrows(PaymentNotFoundException.class, () -> orderService.create(cardRequest("pi_1")));
+                verify(paymentGateway, never()).refund(anyString());
+        }
+
+        @Test
+        void shouldPropagateGatewayFailuresWithoutRefund() {
+                stubTablet();
                 when(paymentGateway.retrievePaymentIntent("pi_1"))
                                 .thenThrow(new PaymentGatewayException(new RuntimeException("boom")));
 
                 assertThrows(PaymentGatewayException.class, () -> orderService.create(cardRequest("pi_1")));
+                verify(paymentGateway, never()).refund(anyString());
                 verify(orderRepository, never()).save(any(OrderEntity.class));
         }
 
@@ -435,17 +537,19 @@ class OrderServiceImplTest {
                                 2, "DINE IN", "CARD", List.of(new OrderItemCreateDTORequest(4, 2)), paymentIntentId);
         }
 
-        private void stubCardOrderValidation() {
-                ProductEntity product = org.mockito.Mockito.mock(ProductEntity.class);
+        private void stubTablet() {
                 when(tabletRepository.existsById(2)).thenReturn(true);
-                when(productRepository.findAllById(List.of(4))).thenReturn(List.of(product));
-                when(product.getId()).thenReturn(4);
-                when(product.getPrice()).thenReturn(new BigDecimal("12.50"));
-                when(product.getStatus()).thenReturn(true);
         }
 
-        private void stubCardOrder() {
-                stubCardOrderValidation();
+        private void stubProduct(String price, boolean active) {
+                ProductEntity product = org.mockito.Mockito.mock(ProductEntity.class);
+                when(productRepository.findAllById(List.of(4))).thenReturn(List.of(product));
+                lenient().when(product.getId()).thenReturn(4);
+                lenient().when(product.getPrice()).thenReturn(new BigDecimal(price));
+                lenient().when(product.getStatus()).thenReturn(active);
+        }
+
+        private void stubSavedOrder() {
                 OrderDTOResponse response = new OrderDTOResponse(
                                 7, 2, "DINE IN", "CARD", "PENDING",
                                 new BigDecimal("25.00"), null, null, List.of());
