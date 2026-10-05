@@ -36,6 +36,7 @@ class SalesReportArchiveControllerIntegrationTest extends IntegrationTest {
 
         mockMvc.perform(post(ARCHIVE_URL)
                 .servletPath(ARCHIVE_URL)
+                .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("date", "2026-10-01"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.date").value("2026-10-01"))
@@ -49,7 +50,9 @@ class SalesReportArchiveControllerIntegrationTest extends IntegrationTest {
         LocalDate yesterday = LocalDate.now().minusDays(1);
         when(salesReportArchiveJob.archive(yesterday)).thenReturn("daily/sales-report-" + yesterday + ".pdf");
 
-        mockMvc.perform(post(ARCHIVE_URL).servletPath(ARCHIVE_URL))
+        mockMvc.perform(post(ARCHIVE_URL)
+                .servletPath(ARCHIVE_URL)
+                .header("Authorization", "Bearer " + tokenForRole("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.date").value(yesterday.toString()));
 
@@ -63,6 +66,7 @@ class SalesReportArchiveControllerIntegrationTest extends IntegrationTest {
 
         mockMvc.perform(post(ARCHIVE_URL)
                 .servletPath(ARCHIVE_URL)
+                .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("date", "2026-10-01"))
                 .andExpect(status().isBadGateway());
     }
@@ -71,7 +75,25 @@ class SalesReportArchiveControllerIntegrationTest extends IntegrationTest {
     void archiveReturnsBadRequestWhenTheDateIsNotValid() throws Exception {
         mockMvc.perform(post(ARCHIVE_URL)
                 .servletPath(ARCHIVE_URL)
+                .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("date", "01-10-2026"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void archiveReturnsUnauthorizedWithoutToken() throws Exception {
+        mockMvc.perform(post(ARCHIVE_URL)
+                .servletPath(ARCHIVE_URL)
+                .param("date", "2026-10-01"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void archiveReturnsForbiddenForKitchenRole() throws Exception {
+        mockMvc.perform(post(ARCHIVE_URL)
+                .servletPath(ARCHIVE_URL)
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN"))
+                .param("date", "2026-10-01"))
+                .andExpect(status().isForbidden());
     }
 }

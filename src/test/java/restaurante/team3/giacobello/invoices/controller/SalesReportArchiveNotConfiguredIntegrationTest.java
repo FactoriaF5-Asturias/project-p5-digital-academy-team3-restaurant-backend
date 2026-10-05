@@ -22,6 +22,7 @@ class SalesReportArchiveNotConfiguredIntegrationTest extends IntegrationTest {
     void archiveReturnsServiceUnavailableWhenSupabaseIsNotConfigured() throws Exception {
         mockMvc.perform(post(ARCHIVE_URL)
                 .servletPath(ARCHIVE_URL)
+                .header("Authorization", "Bearer " + tokenForRole("ADMIN"))
                 .param("date", "2026-10-01"))
                 .andExpect(status().isServiceUnavailable());
     }
