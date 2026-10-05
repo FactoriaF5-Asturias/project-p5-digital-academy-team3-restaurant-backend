@@ -35,6 +35,9 @@ import restaurante.team3.giacobello.tablets.repository.TabletRepository;
 public class OrderServiceImpl implements OrderService {
 
     private static final BigDecimal MAX_TOTAL = new BigDecimal("99999999.99");
+    private static final Set<String> ALLOWED_ORDER_TYPE_NAMES = Set.of(
+            "DINE IN",
+            "TAKEAWAY");
     private static final Set<String> ALLOWED_STATUS_NAMES = Set.of(
             "PENDING",
             "CANCELLED",
@@ -162,11 +165,11 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private void validateRequest(OrderCreateDTORequest request) {
-        if (!"DINE IN".equals(request.orderTypeName())
+        if (!ALLOWED_ORDER_TYPE_NAMES.contains(request.orderTypeName())
                 || !"CASH".equals(request.paymentMethodName())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Esta versión admite DINE IN con CASH");
+                    "Esta versión admite DINE IN o TAKEAWAY con CASH");
         }
 
         if (request.tabletId() == null || request.tabletId() <= 0) {

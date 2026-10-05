@@ -141,6 +141,9 @@ Content-Type: application/json
 
 4. Respuesta tiene quer ser: 201 ok, significa que el order ha sido creado. Para verlo usar otro endpoint GET api/v1/orders o GET /api/orders/{id}.
 
+Para pedidos para llevar, usar `"orderTypeName": "TAKEAWAY"`; al igual que
+`DINE IN`, actualmente solo se admite el método de pago `CASH`.
+
 #### PUT /api/v1/orders/{id}/status
 
 1. Insertar id del pedido del que hay qie cambiar el status.
