@@ -44,6 +44,9 @@ public class OrderEntity {
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
 
+    @Column(name = "stripe_payment_intent_id", length = 255, unique = true)
+    private String stripePaymentIntentId;
+
     public OrderEntity() {
     }
 
@@ -110,6 +113,14 @@ public class OrderEntity {
 
     public void setPaidAt(LocalDateTime paidAt) {
         this.paidAt = paidAt;
+    }
+
+    public String getStripePaymentIntentId() {
+        return stripePaymentIntentId;
+    }
+
+    public void setStripePaymentIntentId(String stripePaymentIntentId) {
+        this.stripePaymentIntentId = stripePaymentIntentId;
     }
 
     public String getOrderTypeName() {

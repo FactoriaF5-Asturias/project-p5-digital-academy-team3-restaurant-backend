@@ -14,6 +14,8 @@ import restaurante.team3.giacobello.orders.entity.OrderEntity;
 public interface OrderRepository
         extends JpaRepository<OrderEntity, Integer> {
 
+    boolean existsByStripePaymentIntentId(String stripePaymentIntentId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT o FROM OrderEntity o WHERE o.id = :id")
     Optional<OrderEntity> findByIdForUpdate(@Param("id") Integer id);
