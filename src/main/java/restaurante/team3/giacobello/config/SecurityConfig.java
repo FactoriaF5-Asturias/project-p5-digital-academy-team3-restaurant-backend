@@ -82,7 +82,8 @@ public class SecurityConfig {
                                                 .hasAnyRole("KITCHEN", "ADMIN")
                                                 .requestMatchers(HttpMethod.PUT, endpoint + "/orders/*/pay")
                                                 .hasRole("ADMIN")
-                                                .requestMatchers(HttpMethod.POST, endpoint + "/orders")
+                                                .requestMatchers(HttpMethod.POST, endpoint + "/orders",
+                                                                endpoint + "/payments/create-intent")
                                                 .permitAll()
                                                 .requestMatchers(HttpMethod.POST, endpoint + "/categories",
                                                                 endpoint + "/products")
