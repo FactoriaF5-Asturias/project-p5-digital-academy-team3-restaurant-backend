@@ -39,7 +39,7 @@ class GlobalExceptionHandlerTest {
             "category-has-products, 409, Conflict, La categoría tiene productos",
             "product-not-found, 404, Not Found, No existe el producto",
             "product-already-exists, 409, Conflict, El producto ya existe",
-            "payments-not-configured, 503, Service Unavailable, Los pagos con tarjeta no están configurados: falta STRIPE_SECRET_KEY",
+            "payments-not-configured, 503, Service Unavailable, Los pagos con tarjeta no están disponibles",
             "payment-gateway, 502, Bad Gateway, No se pudo contactar con el proveedor de pagos"
     })
     void mapsEachDomainExceptionToItsStatusAndErrorBody(

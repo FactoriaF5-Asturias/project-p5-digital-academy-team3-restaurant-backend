@@ -96,7 +96,7 @@ class PaymentControllerIntegrationTest extends IntegrationTest {
                 .content(body("[ { \"productId\": 1, \"quantity\": 1 } ]")))
                 .andExpect(status().isServiceUnavailable())
                 .andExpect(jsonPath("$.message").value(
-                        "Los pagos con tarjeta no están configurados: falta STRIPE_SECRET_KEY"));
+                        "Los pagos con tarjeta no están disponibles"));
     }
 
     @Test

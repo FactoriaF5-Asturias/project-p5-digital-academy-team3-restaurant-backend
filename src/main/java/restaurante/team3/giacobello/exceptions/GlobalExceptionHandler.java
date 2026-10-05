@@ -2,6 +2,8 @@ package restaurante.team3.giacobello.exceptions;
 
 import java.time.LocalDateTime;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,6 +19,8 @@ import restaurante.team3.giacobello.product.exceptions.ProductNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(CategoryNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleCategoryNotFound(CategoryNotFoundException ex) {
@@ -81,6 +85,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PaymentsNotConfiguredException.class)
     public ResponseEntity<ApiErrorResponse> handlePaymentsNotConfigured(PaymentsNotConfiguredException ex) {
 
+        log.warn("Pago con tarjeta solicitado pero Stripe no está configurado");
+
         ApiErrorResponse body = new ApiErrorResponse(
                 HttpStatus.SERVICE_UNAVAILABLE.value(),
                 HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase(),
@@ -92,6 +98,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PaymentGatewayException.class)
     public ResponseEntity<ApiErrorResponse> handlePaymentGateway(PaymentGatewayException ex) {
+
+        log.error("Fallo del proveedor de pagos: tipo={} codigo={}", ex.getCauseType(), ex.getStripeCode());
 
         ApiErrorResponse body = new ApiErrorResponse(
                 HttpStatus.BAD_GATEWAY.value(),
