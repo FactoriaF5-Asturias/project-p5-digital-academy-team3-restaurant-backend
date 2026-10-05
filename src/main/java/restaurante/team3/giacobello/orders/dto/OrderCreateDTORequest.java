@@ -12,5 +12,6 @@ public record OrderCreateDTORequest(
                 @NotNull @Positive Integer tabletId,
                 @NotBlank String orderTypeName,
                 @NotBlank String paymentMethodName,
-                @NotEmpty List<@NotNull @Valid OrderItemCreateDTORequest> items) {
+                @NotEmpty List<@NotNull @Valid OrderItemCreateDTORequest> items,
+                String paymentIntentId) {
 }

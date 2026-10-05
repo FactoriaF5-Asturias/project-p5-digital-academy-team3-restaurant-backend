@@ -47,7 +47,8 @@ class OrderServiceImplIntegrationTest extends IntegrationTest {
                 "CASH",
                 List.of(
                         new OrderItemCreateDTORequest(1, 2),
-                        new OrderItemCreateDTORequest(8, 1)));
+                        new OrderItemCreateDTORequest(8, 1)),
+                null);
 
         OrderDTOResponse response = orderService.create(request);
 

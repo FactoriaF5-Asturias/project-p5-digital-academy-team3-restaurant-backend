@@ -18,10 +18,15 @@ import restaurante.team3.giacobello.orders.entity.OrderEntity;
 import restaurante.team3.giacobello.orders.mappers.OrderMapper;
 import restaurante.team3.giacobello.orders.repository.OrderItemRepository;
 import restaurante.team3.giacobello.orders.repository.OrderRepository;
+import restaurante.team3.giacobello.payments.exceptions.PaymentGatewayException;
+import restaurante.team3.giacobello.payments.exceptions.PaymentsNotConfiguredException;
+import restaurante.team3.giacobello.payments.gateway.PaymentIntentDetails;
+import restaurante.team3.giacobello.payments.gateway.StripePaymentGateway;
 import restaurante.team3.giacobello.product.entity.ProductEntity;
 import restaurante.team3.giacobello.product.repository.ProductRepository;
 import restaurante.team3.giacobello.tablets.repository.TabletRepository;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 
 import java.math.BigDecimal;
@@ -33,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -60,6 +66,9 @@ class OrderServiceImplTest {
         @Mock
         private InvoiceRepository invoiceRepository;
 
+        @Mock
+        private StripePaymentGateway paymentGateway;
+
         @Spy
         private OrderTotalCalculator orderTotalCalculator = new OrderTotalCalculator();
 
@@ -73,7 +82,8 @@ class OrderServiceImplTest {
                                 2,
                                 "DINE IN",
                                 "CASH",
-                                List.of(new OrderItemCreateDTORequest(4, 2)));
+                                List.of(new OrderItemCreateDTORequest(4, 2)),
+                                null);
                 OrderDTOResponse response = new OrderDTOResponse(
                                 7,
                                 2,
@@ -112,7 +122,8 @@ class OrderServiceImplTest {
                                 2,
                                 "TAKEAWAY",
                                 "CASH",
-                                List.of(new OrderItemCreateDTORequest(4, 2)));
+                                List.of(new OrderItemCreateDTORequest(4, 2)),
+                                null);
                 OrderDTOResponse response = new OrderDTOResponse(
                                 7,
                                 2,
@@ -267,6 +278,183 @@ class OrderServiceImplTest {
                 assertEquals("INV-7", invoice.getInvoiceNumber());
                 assertEquals(new BigDecimal("25.00"), invoice.getTotalAmount());
                 assertEquals(order.getPaidAt(), invoice.getIssuedAt());
+        }
+
+        @Test
+        void shouldCreatePaidOrderAndIssueInvoiceWhenPaymentIntentSucceeded() {
+                stubCardOrder();
+                when(paymentGateway.retrievePaymentIntent("pi_1"))
+                                .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2500, "eur"));
+
+                OrderDTOResponse result = orderService.create(cardRequest("pi_1"));
+
+                assertEquals(7, result.id());
+                ArgumentCaptor<OrderEntity> orderCaptor = ArgumentCaptor.forClass(OrderEntity.class);
+                verify(orderRepository).save(orderCaptor.capture());
+                OrderEntity saved = orderCaptor.getValue();
+                assertNotNull(saved.getPaidAt());
+                assertEquals("PENDING", saved.getStatusName());
+                assertEquals("pi_1", saved.getStripePaymentIntentId());
+                ArgumentCaptor<InvoiceEntity> invoiceCaptor = ArgumentCaptor.forClass(InvoiceEntity.class);
+                verify(invoiceRepository).save(invoiceCaptor.capture());
+                assertEquals("INV-7", invoiceCaptor.getValue().getInvoiceNumber());
+                assertEquals(new BigDecimal("25.00"), invoiceCaptor.getValue().getTotalAmount());
+                assertEquals(saved.getPaidAt(), invoiceCaptor.getValue().getIssuedAt());
+        }
+
+        @Test
+        void shouldRejectWithPaymentRequiredWhenPaymentIntentHasNotSucceeded() {
+                stubCardOrderValidation();
+                when(orderRepository.existsByStripePaymentIntentId("pi_1")).thenReturn(false);
+                when(paymentGateway.retrievePaymentIntent("pi_1"))
+                                .thenReturn(new PaymentIntentDetails("pi_1", "requires_payment_method", 2500, "eur"));
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(cardRequest("pi_1")));
+
+                assertEquals(HttpStatus.PAYMENT_REQUIRED.value(), ex.getStatusCode().value());
+                verify(orderRepository, never()).save(any(OrderEntity.class));
+                verifyNoInteractions(invoiceRepository);
+        }
+
+        @Test
+        void shouldRejectWhenPaidAmountDoesNotMatchOrderTotal() {
+                stubCardOrderValidation();
+                when(paymentGateway.retrievePaymentIntent("pi_1"))
+                                .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2400, "eur"));
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(cardRequest("pi_1")));
+
+                assertEquals(HttpStatus.CONFLICT.value(), ex.getStatusCode().value());
+                verify(orderRepository, never()).save(any(OrderEntity.class));
+                verifyNoInteractions(invoiceRepository);
+        }
+
+        @Test
+        void shouldRejectWhenPaidCurrencyIsNotEuro() {
+                stubCardOrderValidation();
+                when(paymentGateway.retrievePaymentIntent("pi_1"))
+                                .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2500, "usd"));
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(cardRequest("pi_1")));
+
+                assertEquals(HttpStatus.CONFLICT.value(), ex.getStatusCode().value());
+                verify(orderRepository, never()).save(any(OrderEntity.class));
+        }
+
+        @Test
+        void shouldRejectWhenPaymentIntentWasAlreadyUsedByAnotherOrder() {
+                stubCardOrderValidation();
+                when(orderRepository.existsByStripePaymentIntentId("pi_1")).thenReturn(true);
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(cardRequest("pi_1")));
+
+                assertEquals(HttpStatus.CONFLICT.value(), ex.getStatusCode().value());
+                verifyNoInteractions(paymentGateway, invoiceRepository);
+                verify(orderRepository, never()).save(any(OrderEntity.class));
+        }
+
+        @Test
+        void shouldTranslateUniqueConstraintRaceToConflict() {
+                stubCardOrderValidation();
+                when(paymentGateway.retrievePaymentIntent("pi_1"))
+                                .thenReturn(new PaymentIntentDetails("pi_1", "succeeded", 2500, "eur"));
+                when(orderRepository.save(any(OrderEntity.class)))
+                                .thenThrow(new DataIntegrityViolationException("uq_orders_stripe_payment_intent_id"));
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(cardRequest("pi_1")));
+
+                assertEquals(HttpStatus.CONFLICT.value(), ex.getStatusCode().value());
+                verifyNoInteractions(invoiceRepository);
+        }
+
+        @Test
+        void shouldNotSwallowUnrelatedIntegrityViolationsOfUnpaidOrders() {
+                ProductEntity product = org.mockito.Mockito.mock(ProductEntity.class);
+                when(tabletRepository.existsById(2)).thenReturn(true);
+                when(productRepository.findAllById(List.of(4))).thenReturn(List.of(product));
+                when(product.getId()).thenReturn(4);
+                when(product.getPrice()).thenReturn(new BigDecimal("12.50"));
+                when(product.getStatus()).thenReturn(true);
+                when(orderRepository.save(any(OrderEntity.class)))
+                                .thenThrow(new DataIntegrityViolationException("other"));
+
+                assertThrows(DataIntegrityViolationException.class, () -> orderService.create(new OrderCreateDTORequest(
+                                2, "DINE IN", "CASH", List.of(new OrderItemCreateDTORequest(4, 2)), null)));
+        }
+
+        @Test
+        void shouldRejectPaymentIntentWithCashPaymentMethod() {
+                OrderCreateDTORequest request = new OrderCreateDTORequest(
+                                2, "DINE IN", "CASH", List.of(new OrderItemCreateDTORequest(4, 2)), "pi_1");
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(request));
+
+                assertEquals(HttpStatus.BAD_REQUEST.value(), ex.getStatusCode().value());
+                verifyNoInteractions(paymentGateway, orderRepository, invoiceRepository);
+        }
+
+        @Test
+        void shouldRejectBlankPaymentIntentId() {
+                OrderCreateDTORequest request = new OrderCreateDTORequest(
+                                2, "DINE IN", "CARD", List.of(new OrderItemCreateDTORequest(4, 2)), "  ");
+
+                ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                                () -> orderService.create(request));
+
+                assertEquals(HttpStatus.BAD_REQUEST.value(), ex.getStatusCode().value());
+                verifyNoInteractions(paymentGateway, orderRepository, invoiceRepository);
+        }
+
+        @Test
+        void shouldPropagateWhenStripeIsNotConfigured() {
+                stubCardOrderValidation();
+                when(paymentGateway.retrievePaymentIntent("pi_1")).thenThrow(new PaymentsNotConfiguredException());
+
+                assertThrows(PaymentsNotConfiguredException.class, () -> orderService.create(cardRequest("pi_1")));
+                verify(orderRepository, never()).save(any(OrderEntity.class));
+        }
+
+        @Test
+        void shouldPropagateGatewayFailures() {
+                stubCardOrderValidation();
+                when(paymentGateway.retrievePaymentIntent("pi_1"))
+                                .thenThrow(new PaymentGatewayException(new RuntimeException("boom")));
+
+                assertThrows(PaymentGatewayException.class, () -> orderService.create(cardRequest("pi_1")));
+                verify(orderRepository, never()).save(any(OrderEntity.class));
+        }
+
+        private OrderCreateDTORequest cardRequest(String paymentIntentId) {
+                return new OrderCreateDTORequest(
+                                2, "DINE IN", "CARD", List.of(new OrderItemCreateDTORequest(4, 2)), paymentIntentId);
+        }
+
+        private void stubCardOrderValidation() {
+                ProductEntity product = org.mockito.Mockito.mock(ProductEntity.class);
+                when(tabletRepository.existsById(2)).thenReturn(true);
+                when(productRepository.findAllById(List.of(4))).thenReturn(List.of(product));
+                when(product.getId()).thenReturn(4);
+                when(product.getPrice()).thenReturn(new BigDecimal("12.50"));
+                when(product.getStatus()).thenReturn(true);
+        }
+
+        private void stubCardOrder() {
+                stubCardOrderValidation();
+                OrderDTOResponse response = new OrderDTOResponse(
+                                7, 2, "DINE IN", "CARD", "PENDING",
+                                new BigDecimal("25.00"), null, null, List.of());
+                doAnswer(invocation -> {
+                        OrderEntity order = invocation.getArgument(0);
+                        order.setId(7);
+                        return order;
+                }).when(orderRepository).save(any(OrderEntity.class));
+                when(orderMapper.toResponse(any(OrderEntity.class))).thenReturn(response);
         }
 
         private OrderEntity orderWith(Integer id, String statusName) {

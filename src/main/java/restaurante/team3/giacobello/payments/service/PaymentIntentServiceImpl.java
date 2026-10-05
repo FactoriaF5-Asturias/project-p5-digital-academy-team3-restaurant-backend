@@ -1,6 +1,5 @@
 package restaurante.team3.giacobello.payments.service;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -24,7 +23,6 @@ import restaurante.team3.giacobello.product.repository.ProductRepository;
 @Service
 public class PaymentIntentServiceImpl implements PaymentIntentService {
 
-    static final String CURRENCY = "eur";
     static final long MIN_AMOUNT_IN_CENTS = 50;
 
     private final ProductRepository productRepository;
@@ -57,7 +55,7 @@ public class PaymentIntentServiceImpl implements PaymentIntentService {
                         Function.identity()));
 
         OrderPricing pricing = orderTotalCalculator.calculate(request.items(), products);
-        long amountInCents = toCents(pricing.total());
+        long amountInCents = pricing.totalInCents();
 
         if (amountInCents < MIN_AMOUNT_IN_CENTS) {
             throw new ResponseStatusException(
@@ -65,12 +63,8 @@ public class PaymentIntentServiceImpl implements PaymentIntentService {
                     "El importe mínimo para pagar con tarjeta es 0,50 €");
         }
 
-        PaymentIntentCreated intent = paymentGateway.createPaymentIntent(amountInCents, CURRENCY);
+        PaymentIntentCreated intent = paymentGateway.createPaymentIntent(amountInCents, StripePaymentGateway.CURRENCY);
 
         return new PaymentIntentDTOResponse(intent.id(), intent.clientSecret(), pricing.total());
-    }
-
-    private long toCents(BigDecimal total) {
-        return total.movePointRight(2).longValueExact();
     }
 }

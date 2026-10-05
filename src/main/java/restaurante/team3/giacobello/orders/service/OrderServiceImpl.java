@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import java.util.Set;
 import java.util.Locale;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +25,8 @@ import restaurante.team3.giacobello.orders.entity.OrderItemEntity;
 import restaurante.team3.giacobello.orders.mappers.OrderMapper;
 import restaurante.team3.giacobello.orders.repository.OrderItemRepository;
 import restaurante.team3.giacobello.orders.repository.OrderRepository;
+import restaurante.team3.giacobello.payments.gateway.PaymentIntentDetails;
+import restaurante.team3.giacobello.payments.gateway.StripePaymentGateway;
 import restaurante.team3.giacobello.product.entity.ProductEntity;
 import restaurante.team3.giacobello.product.repository.ProductRepository;
 import restaurante.team3.giacobello.tablets.repository.TabletRepository;
@@ -39,6 +42,7 @@ public class OrderServiceImpl implements OrderService {
             "DELAYED",
             "IN PROGRESS");
     private static final Set<String> ALLOWED_ORDER_TYPE_NAMES = Set.of("DINE IN", "TAKEAWAY");
+    private static final String PAYMENT_SUCCEEDED = "succeeded";
     private static final Set<String> ALLOWED_PAYMENT_METHOD_NAMES = Set.of("CASH", "CARD");
     private final OrderRepository orderRepository;
     private final OrderMapper orderMapper;
@@ -47,6 +51,7 @@ public class OrderServiceImpl implements OrderService {
     private final OrderItemRepository orderItemRepository;
     private final InvoiceRepository invoiceRepository;
     private final OrderTotalCalculator orderTotalCalculator;
+    private final StripePaymentGateway paymentGateway;
 
     public OrderServiceImpl(
             OrderRepository orderRepository,
@@ -55,7 +60,8 @@ public class OrderServiceImpl implements OrderService {
             TabletRepository tabletRepository,
             OrderItemRepository orderItemRepository,
             InvoiceRepository invoiceRepository,
-            OrderTotalCalculator orderTotalCalculator) {
+            OrderTotalCalculator orderTotalCalculator,
+            StripePaymentGateway paymentGateway) {
         this.orderRepository = orderRepository;
         this.orderMapper = orderMapper;
         this.productRepository = productRepository;
@@ -63,6 +69,7 @@ public class OrderServiceImpl implements OrderService {
         this.orderItemRepository = orderItemRepository;
         this.invoiceRepository = invoiceRepository;
         this.orderTotalCalculator = orderTotalCalculator;
+        this.paymentGateway = paymentGateway;
     }
 
     @Override
@@ -122,10 +129,70 @@ public class OrderServiceImpl implements OrderService {
 
         order.setTotalAmount(pricing.total());
 
-        OrderEntity savedOrder = orderRepository.save(order);
+        String paymentIntentId = request.paymentIntentId();
+        boolean paidOnline = paymentIntentId != null;
+
+        if (paidOnline) {
+            verifyPaymentIntent(paymentIntentId, pricing.totalInCents());
+            order.setStripePaymentIntentId(paymentIntentId);
+            order.setPaidAt(order.getCreatedAt());
+        }
+
+        OrderEntity savedOrder = saveOrder(order, paidOnline);
         orderItemRepository.saveAll(lines);
         savedOrder.getItems().addAll(lines);
+
+        if (paidOnline) {
+            createInvoice(savedOrder, savedOrder.getPaidAt());
+        }
+
         return orderMapper.toResponse(savedOrder);
+    }
+
+    private OrderEntity saveOrder(OrderEntity order, boolean paidOnline) {
+        try {
+            return orderRepository.save(order);
+        } catch (DataIntegrityViolationException e) {
+            if (paidOnline) {
+                throw paymentAlreadyUsed();
+            }
+            throw e;
+        }
+    }
+
+    private void verifyPaymentIntent(String paymentIntentId, long expectedAmountInCents) {
+        if (orderRepository.existsByStripePaymentIntentId(paymentIntentId)) {
+            throw paymentAlreadyUsed();
+        }
+
+        PaymentIntentDetails details = paymentGateway.retrievePaymentIntent(paymentIntentId);
+
+        if (!PAYMENT_SUCCEEDED.equals(details.status())) {
+            throw new ResponseStatusException(
+                    HttpStatus.PAYMENT_REQUIRED,
+                    "El pago con tarjeta no se ha completado");
+        }
+
+        if (!StripePaymentGateway.CURRENCY.equalsIgnoreCase(details.currency())
+                || details.amountInCents() != expectedAmountInCents) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "El importe pagado no coincide con el total del pedido");
+        }
+    }
+
+    private ResponseStatusException paymentAlreadyUsed() {
+        return new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                "El pago con tarjeta ya se ha utilizado en otro pedido");
+    }
+
+    private void createInvoice(OrderEntity order, LocalDateTime paidAt) {
+        invoiceRepository.save(new InvoiceEntity(
+                order.getId(),
+                "INV-" + order.getId(),
+                order.getTotalAmount(),
+                paidAt));
     }
 
     private void validateRequest(OrderCreateDTORequest request) {
@@ -139,6 +206,20 @@ public class OrderServiceImpl implements OrderService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Método de pago no admitido: usa CASH o CARD");
+        }
+
+        if (request.paymentIntentId() != null) {
+            if (request.paymentIntentId().isBlank()) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "El identificador de pago no es válido");
+            }
+
+            if (!"CARD".equals(request.paymentMethodName())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Solo se puede enviar un pago previo con el método CARD");
+            }
         }
 
         if (request.tabletId() == null || request.tabletId() <= 0) {
@@ -213,11 +294,7 @@ public class OrderServiceImpl implements OrderService {
         order.setPaidAt(paidAt);
         OrderEntity savedOrder = orderRepository.save(order);
 
-        invoiceRepository.save(new InvoiceEntity(
-                savedOrder.getId(),
-                "INV-" + savedOrder.getId(),
-                savedOrder.getTotalAmount(),
-                paidAt));
+        createInvoice(savedOrder, paidAt);
 
         return orderMapper.toResponse(savedOrder);
     }
