@@ -8,8 +8,8 @@ Method - Endpoint - Envia - Recibe
 
 | Hecho | Method | Endpoint                      | Da                                                                 | Recibe                                            | Errores       |
 | ----- | ------ | ----------------------------- | ------------------------------------------------------------------ | ------------------------------------------------- | ------------- |
-| [X]   | POST   | `/api/v1/auth/token`           | `username`, `password`                                             | Token JWT                                        | 400, 401, 409 |
-| [X]   | POST   | `/api/v1/auth/change-password` | `username`, `currentPassword`, `newPassword`                       | Token JWT                                        | 400, 401, 409 |
+| [X]   | POST   | `/api/v1/auth/token`          | `username`, `password`                                             | Token JWT                                        | 400, 401, 409 |
+| [X]   | POST   | `/api/v1/auth/change-password`| `username`, `currentPassword`, `newPassword`                       | Token JWT                                        | 400, 401, 409 |
 | [X]   | GET    | `/api/products`               | ---                                                                | Lista de productos activos                        | 500           |
 | [X]   | GET    | `/api/products/{id}`          | `id` del producto                                                  | Producto                                          | 404, 400      |
 | [X]   | POST   | `/api/products`               | `name`, `description`, `categoryId`, `price`, `imageURL`, `status` | Producto creado                                   | 400, 404, 409 |
