@@ -13,4 +13,9 @@ public class UnconfiguredPaymentGateway implements StripePaymentGateway {
     public PaymentIntentDetails retrievePaymentIntent(String paymentIntentId) {
         throw new PaymentsNotConfiguredException();
     }
+
+    @Override
+    public void refund(String paymentIntentId) {
+        throw new PaymentsNotConfiguredException();
+    }
 }

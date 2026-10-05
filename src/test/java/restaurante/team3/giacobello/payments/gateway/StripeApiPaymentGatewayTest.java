@@ -104,4 +104,21 @@ class StripeApiPaymentGatewayTest {
 
         assertThrows(PaymentGatewayException.class, () -> gateway.retrievePaymentIntent("pi_x"));
     }
+
+    @Test
+    void refundCreatesARefundForThePaymentIntent() {
+        respond(200, "{\"id\":\"re_1\",\"object\":\"refund\",\"status\":\"succeeded\"}");
+
+        gateway.refund("pi_1");
+
+        assertEquals("/v1/refunds", lastRequestPath.get());
+        assertTrue(lastRequestBody.get().contains("payment_intent=pi_1"));
+    }
+
+    @Test
+    void refundWrapsStripeErrors() {
+        respond(500, "{\"error\":{\"type\":\"api_error\",\"message\":\"boom\"}}");
+
+        assertThrows(PaymentGatewayException.class, () -> gateway.refund("pi_1"));
+    }
 }

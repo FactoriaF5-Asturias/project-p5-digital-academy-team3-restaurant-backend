@@ -21,4 +21,9 @@ class UnconfiguredPaymentGatewayTest {
         assertThrows(PaymentsNotConfiguredException.class,
                 () -> gateway.retrievePaymentIntent("pi_1"));
     }
+
+    @Test
+    void refundFailsAsNotConfigured() {
+        assertThrows(PaymentsNotConfiguredException.class, () -> gateway.refund("pi_1"));
+    }
 }

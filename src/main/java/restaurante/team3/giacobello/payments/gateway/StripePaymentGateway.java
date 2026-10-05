@@ -8,4 +8,6 @@ public interface StripePaymentGateway {
     PaymentIntentCreated createPaymentIntent(long amountInCents, String currency);
 
     PaymentIntentDetails retrievePaymentIntent(String paymentIntentId);
+
+    void refund(String paymentIntentId);
 }

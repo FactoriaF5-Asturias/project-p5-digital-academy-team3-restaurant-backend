@@ -5,6 +5,7 @@ import com.stripe.exception.InvalidRequestException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.param.RefundCreateParams;
 
 import restaurante.team3.giacobello.payments.exceptions.PaymentGatewayException;
 import restaurante.team3.giacobello.payments.exceptions.PaymentNotFoundException;
@@ -43,6 +44,18 @@ public class StripeApiPaymentGateway implements StripePaymentGateway {
                     intent.getCurrency());
         } catch (InvalidRequestException e) {
             throw new PaymentNotFoundException();
+        } catch (StripeException e) {
+            throw new PaymentGatewayException(e);
+        }
+    }
+
+    @Override
+    public void refund(String paymentIntentId) {
+        RefundCreateParams params = RefundCreateParams.builder()
+                .setPaymentIntent(paymentIntentId)
+                .build();
+        try {
+            stripeClient.v1().refunds().create(params);
         } catch (StripeException e) {
             throw new PaymentGatewayException(e);
         }
