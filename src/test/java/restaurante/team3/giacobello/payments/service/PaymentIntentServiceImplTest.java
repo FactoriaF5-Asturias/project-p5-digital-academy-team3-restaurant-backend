@@ -123,6 +123,28 @@ class PaymentIntentServiceImplTest {
     }
 
     @Test
+    void rejectsAmountsAboveTheStripeMaximum() {
+        stubProducts(List.of(4), product(4, "1000000.00", true));
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> service.createIntent(new PaymentIntentCreateDTORequest(
+                        List.of(new OrderItemCreateDTORequest(4, 1)))));
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), ex.getStatusCode().value());
+        verifyNoInteractions(paymentGateway);
+    }
+
+    @Test
+    void acceptsTheStripeMaximum() {
+        stubProducts(List.of(4), product(4, "999999.99", true));
+        when(paymentGateway.createPaymentIntent(99_999_999L, "eur"))
+                .thenReturn(new PaymentIntentCreated("pi_max", "secret"));
+
+        assertEquals("pi_max", service.createIntent(new PaymentIntentCreateDTORequest(
+                List.of(new OrderItemCreateDTORequest(4, 1)))).paymentIntentId());
+    }
+
+    @Test
     void propagatesWhenStripeIsNotConfigured() {
         stubProducts(List.of(4), product(4, "5.00", true));
         when(paymentGateway.createPaymentIntent(anyLong(), anyString()))

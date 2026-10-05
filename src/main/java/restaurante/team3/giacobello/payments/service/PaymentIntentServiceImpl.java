@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import restaurante.team3.giacobello.orders.dto.OrderItemCreateDTORequest;
@@ -39,7 +38,6 @@ public class PaymentIntentServiceImpl implements PaymentIntentService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public PaymentIntentDTOResponse createIntent(PaymentIntentCreateDTORequest request) {
         orderTotalCalculator.validateItems(request.items());
 
@@ -61,6 +59,12 @@ public class PaymentIntentServiceImpl implements PaymentIntentService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "El importe mínimo para pagar con tarjeta es 0,50 €");
+        }
+
+        if (amountInCents > StripePaymentGateway.MAX_AMOUNT_IN_CENTS) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El importe supera el máximo permitido para pagar con tarjeta");
         }
 
         PaymentIntentCreated intent = paymentGateway.createPaymentIntent(amountInCents, StripePaymentGateway.CURRENCY);
