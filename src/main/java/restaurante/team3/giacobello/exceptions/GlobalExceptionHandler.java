@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import restaurante.team3.giacobello.categories.exceptions.CategoryAlreadyExistsException;
 import restaurante.team3.giacobello.categories.exceptions.CategoryHasProductsException;
 import restaurante.team3.giacobello.categories.exceptions.CategoryNotFoundException;
+import restaurante.team3.giacobello.payments.exceptions.PaymentGatewayException;
+import restaurante.team3.giacobello.payments.exceptions.PaymentsNotConfiguredException;
 import restaurante.team3.giacobello.product.exceptions.ProductAlreadyExistsException;
 import restaurante.team3.giacobello.product.exceptions.ProductNotFoundException;
 
@@ -74,6 +76,30 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now());
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(PaymentsNotConfiguredException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentsNotConfigured(PaymentsNotConfiguredException ex) {
+
+        ApiErrorResponse body = new ApiErrorResponse(
+                HttpStatus.SERVICE_UNAVAILABLE.value(),
+                HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase(),
+                ex.getMessage(),
+                LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(body);
+    }
+
+    @ExceptionHandler(PaymentGatewayException.class)
+    public ResponseEntity<ApiErrorResponse> handlePaymentGateway(PaymentGatewayException ex) {
+
+        ApiErrorResponse body = new ApiErrorResponse(
+                HttpStatus.BAD_GATEWAY.value(),
+                HttpStatus.BAD_GATEWAY.getReasonPhrase(),
+                ex.getMessage(),
+                LocalDateTime.now());
+
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(body);
     }
 
 }

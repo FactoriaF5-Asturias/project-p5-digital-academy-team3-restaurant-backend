@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RestController;
 import restaurante.team3.giacobello.categories.exceptions.CategoryAlreadyExistsException;
 import restaurante.team3.giacobello.categories.exceptions.CategoryHasProductsException;
 import restaurante.team3.giacobello.categories.exceptions.CategoryNotFoundException;
+import restaurante.team3.giacobello.payments.exceptions.PaymentGatewayException;
+import restaurante.team3.giacobello.payments.exceptions.PaymentsNotConfiguredException;
 import restaurante.team3.giacobello.product.exceptions.ProductAlreadyExistsException;
 import restaurante.team3.giacobello.product.exceptions.ProductNotFoundException;
 
@@ -36,7 +38,9 @@ class GlobalExceptionHandlerTest {
             "category-already-exists, 409, Conflict, La categoría ya existe",
             "category-has-products, 409, Conflict, La categoría tiene productos",
             "product-not-found, 404, Not Found, No existe el producto",
-            "product-already-exists, 409, Conflict, El producto ya existe"
+            "product-already-exists, 409, Conflict, El producto ya existe",
+            "payments-not-configured, 503, Service Unavailable, Los pagos con tarjeta no están configurados: falta STRIPE_SECRET_KEY",
+            "payment-gateway, 502, Bad Gateway, No se pudo contactar con el proveedor de pagos"
     })
     void mapsEachDomainExceptionToItsStatusAndErrorBody(
             String exception,
@@ -62,6 +66,8 @@ class GlobalExceptionHandlerTest {
                 case "category-has-products" -> new CategoryHasProductsException("La categoría tiene productos");
                 case "product-not-found" -> new ProductNotFoundException("No existe el producto");
                 case "product-already-exists" -> new ProductAlreadyExistsException("El producto ya existe");
+                case "payments-not-configured" -> new PaymentsNotConfiguredException();
+                case "payment-gateway" -> new PaymentGatewayException(new RuntimeException("stripe detail"));
                 default -> new IllegalArgumentException(exception);
             };
         }

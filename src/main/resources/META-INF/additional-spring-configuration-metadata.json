@@ -8,5 +8,10 @@
     "name": "jwt.key",
     "type": "java.lang.String",
     "description": "A description for 'jwt.key'"
+  },
+  {
+    "name": "stripe.secret-key",
+    "type": "java.lang.String",
+    "description": "Stripe secret key (sk_test_... in test mode). Empty disables card payments: payment endpoints answer 503."
   }
 ]}
