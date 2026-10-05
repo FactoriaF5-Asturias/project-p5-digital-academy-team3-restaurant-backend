@@ -54,6 +54,27 @@ class InvoiceControllerIntegrationTest extends IntegrationTest {
                 .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
                 .andExpect(status().isForbidden());
     }
+
+    @Test
+    void findAllInvoicesReturnsUnauthorizedWithoutToken() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void kitchenCannotGetSalesTotals() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices/totals")
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void kitchenCannotDownloadSalesReportPdf() throws Exception {
+        mockMvc.perform(get("/api/v1/invoices/report/pdf")
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN"))
+                .param("period", "QUARTER"))
+                .andExpect(status().isForbidden());
+    }
     
     @Transactional
     void findAllWithDateRangeReturnsOnlyInvoicesIssuedInsideRange() throws Exception {

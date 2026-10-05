@@ -362,6 +362,34 @@ class OrderControllerIntegrationTest extends IntegrationTest {
                 .andExpect(status().isNotFound());
     }
 
+    @Test
+    void invoicePdfReturnsUnauthorizedWithoutToken() throws Exception {
+        mockMvc.perform(get("/api/v1/orders/{id}/invoice/pdf", 1))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void clientCannotDownloadInvoicePdf() throws Exception {
+        mockMvc.perform(get("/api/v1/orders/{id}/invoice/pdf", 1)
+                .header("Authorization", "Bearer " + tokenForRole("CLIENT")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void payReturnsUnauthorizedWithoutToken() throws Exception {
+        mockMvc.perform(put("/api/v1/orders/{id}/pay", 1)
+                .servletPath("/api/v1/orders/1/pay"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void kitchenCannotPayAnOrder() throws Exception {
+        mockMvc.perform(put("/api/v1/orders/{id}/pay", 1)
+                .servletPath("/api/v1/orders/1/pay")
+                .header("Authorization", "Bearer " + tokenForRole("KITCHEN")))
+                .andExpect(status().isForbidden());
+    }
+
     private String extractText(byte[] pdf) throws IOException {
         try (PDDocument document = Loader.loadPDF(pdf)) {
             return new PDFTextStripper().getText(document);
