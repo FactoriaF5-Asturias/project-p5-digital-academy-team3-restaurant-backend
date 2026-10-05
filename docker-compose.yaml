@@ -31,6 +31,7 @@ services:
       DATABASE_URL: jdbc:postgresql://postgres:5432/giacobello
       DATABASE_USERNAME: ${DATABASE_USERNAME}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+      JWT_KEY: ${JWT_KEY:-}
       TZ: Europe/Madrid
       SUPABASE_URL: ${SUPABASE_URL:-}
       SUPABASE_SERVICE_KEY: ${SUPABASE_SERVICE_KEY:-}
