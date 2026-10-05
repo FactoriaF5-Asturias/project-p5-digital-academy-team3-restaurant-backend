@@ -35,6 +35,7 @@ cp .env.example .env
 | `JWT_KEY` | Clave para firmar los tokens JWT (mínimo 64 bytes, HS512). Genérala con `openssl rand -base64 64` |
 | `SUPABASE_URL` | URL del proyecto de Supabase. Opcional |
 | `SUPABASE_SERVICE_KEY` | Clave `service_role` de Supabase. Opcional |
+| `STRIPE_SECRET_KEY` | Clave secreta de Stripe en modo test (`sk_test_...`). Opcional |
 
 ### Resumen de ventas automático
 
@@ -43,6 +44,18 @@ Con `SUPABASE_URL` y `SUPABASE_SERVICE_KEY` rellenas, el backend genera cada noc
 La hora se cambia con `SALES_REPORT_ARCHIVE_CRON` (expresión cron de Spring) y el bucket con `SUPABASE_REPORTS_BUCKET`.
 
 Para subirlo a mano sin esperar a la noche (por ejemplo, en una demo): `POST /api/v1/invoices/report/archive?date=AAAA-MM-DD`. Sin `date` sube el de ayer. Devuelve 503 si Supabase no está configurado y 502 si falla la subida.
+
+### Pago con tarjeta (Stripe, modo test)
+
+Con `STRIPE_SECRET_KEY` rellena (clave `sk_test_...` del dashboard de Stripe en modo test), el cliente puede pagar con tarjeta desde la tablet. Si está vacía, los endpoints de pago responden 503 y el resto de la app funciona igual (efectivo y tarjeta cobrada en barra con `PUT /api/v1/orders/{id}/pay`).
+
+Flujo:
+
+1. El frontend llama a `POST /api/v1/payments/create-intent` con `{ "items": [ { "productId": 1, "quantity": 2 } ] }`. El backend calcula el importe con los precios de la base de datos y responde `{ "paymentIntentId", "clientSecret", "amount" }`. Errores: 400/409 por productos o cantidades inválidos, 503 sin clave, 502 si falla Stripe.
+2. Stripe.js confirma el pago en el navegador con la clave publicable (`pk_test_...`, solo en el frontend) y el `clientSecret`.
+3. El frontend llama a `POST /api/v1/orders` con `paymentMethodName: "CARD"` y el campo `paymentIntentId`. El backend comprueba en Stripe que el pago está `succeeded`, en euros y por el total exacto del pedido, y crea el pedido ya pagado (`paidAt` informado) con su factura. Errores: 402 si el pago no se ha completado, 409 si el importe no coincide o el pago ya se usó en otro pedido, 400 si `paymentIntentId` viaja con `CASH`.
+
+Tarjeta de prueba: `4242 4242 4242 4242`, cualquier fecha futura y cualquier CVC.
 
 ### Opción A: todo en Docker
 

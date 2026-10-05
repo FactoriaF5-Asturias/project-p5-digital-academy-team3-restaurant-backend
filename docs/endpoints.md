@@ -24,8 +24,8 @@ Method - Endpoint - Envia - Recibe
 | [X]   | GET    | `/api/v1/tablets`                | ---                                                                | Lista de mesas/tablets en restaurante             |               |
 | [X]   | GET    | `/api/v1/tablets/{id}`           | `id` de la tablet                                                  | Tablet                                            |               |
 | [X]   | GET    | `/api/v1/payment-methods`        | ---                                                                | Lista de métodos de pago (`CASH`, `CARD`)         |               |
-| [ ]   | POST   | `/api/v1/payments/create-intent` | `amount`, `currency`, `paymentMethod`                              | `clientSecret` + `paymentIntentId` de Stripe      |               |
-| [X]   | POST   | `/api/v1/orders`                 | `tabletId`, `payment_method_name`, `order_type_name`, `items[]`    | Crear `ORDER` + `ORDER_ITEMS`                     |               |
+| [X]   | POST   | `/api/v1/payments/create-intent` | `items[]` (`productId`, `quantity`)                                | `paymentIntentId`, `clientSecret`, `amount` (€)   | 400, 409, 502, 503 |
+| [X]   | POST   | `/api/v1/orders`                 | `tabletId`, `payment_method_name`, `order_type_name`, `items[]`, `paymentIntentId` (opcional, solo `CARD`: crea el pedido ya pagado) | Crear `ORDER` + `ORDER_ITEMS`                     | 400, 402, 409, 502, 503 |
 | [X]   | GET    | `/api/v1/orders`                 | ---                                                                | Visualizar lista de Orders                        |               |
 | [X]   | GET    | `/api/v1/orders/{id}`            | `id` del pedido                                                    | Datos completos del pedido                        |               |
 | [X]   | PUT    | `/api/v1/orders/{id}/status`     | `id` del pedido + `status`                                         | Pedido con el nuevo estado                        |               |
